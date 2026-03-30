@@ -27,10 +27,11 @@ global_clock = core.Clock()
 
 # -------------------- WINDOW --------------------------------
 monitor_settings = stim_monitor()
+
 # set fullscr to True in MSR
 win = visual.Window(
     monitor=monitor_settings['monitor_name'], size=monitor_settings['monitor_size_pix'], 
-    fullscr=False, 
+    fullscr=True, 
     units="deg", 
     color=[211, 211, 211],
     colorSpace='rgb255', 

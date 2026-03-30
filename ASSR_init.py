@@ -10,14 +10,14 @@ from pypixxlib.datapixx import DATAPixx3
 # TO BE CHANGED BY EXPERIMENTER (ONCE PER PARTICIPANT)
 # =================================================================
 SUB = "JOH4" # Participant abbreviation
-CONDITION = "PAS" # "PAS" or "ATT" (ATT=attVIS=attend to visual stim)
+CONDITION = "ATT" # "PAS" or "ATT" (ATT=attVIS=attend to visual stim)
 # =================================================================
 
-MRS = 0     # 0=no, 1=yes
+MRS = 1     # 0=no, 1=yes
 
 # -------------------------- PATHS -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))   # script location
-STIM_DIR = os.path.join(BASE_DIR, "ASSR-stimuli", "sounds") 
+STIM_DIR = os.path.join(BASE_DIR, "ASSR-stimuli") 
 SUB_DIR  = os.path.join(BASE_DIR, "ASSR-data", SUB)
 os.makedirs(SUB_DIR, exist_ok=True) # make the folder if doesn't exist already
 
@@ -213,9 +213,9 @@ def preload_tones(vpdevice, paths):
     vpdevice.audio.stopSchedule()
 
     # check length
-    loaded          = {}
-    total_samples   = 0
-    common_fs       = None # assume same samling freq
+    loaded        = {}
+    total_samples = 0
+    common_fs     = None # assume same samling freq
 
     for name, p in paths.items():
         x, fs, peak = _load_wav_float32(p)
@@ -313,14 +313,17 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
     
     if MRS == 1:
         # ======= AUDITORY
-        # create tone registers
+        # create tone register/s
         audio_reg = preload_tones(vpdevice, {
            'clicktrain':   os.path.join(stimulipath, 'sounds', 'clicktrain_40Hz_500ms.wav')
            # add here for MMN (, 'tone2': etc)
         })
+
         # load threshold
         thr_info  = load_threshold_csv(os.path.join(subjectpath, "round_2_hearing_threshold_1000.csv"))
-        thr_lin   = thr_info["threshold_amplitude"]
+        thr_lin   = thr_info["threshold_amplitude"] # eg 0.00024
+        
+        # assign gains
         audio_reg = assign_subject_gains(audio_reg, threshold_linear=thr_lin, per_tone_dBSL={'Aud_X': dB_SL, 'Aud_Y': dB_SL, 'Aud_FB': dB_SL-10})
         print(audio_reg)        
 
