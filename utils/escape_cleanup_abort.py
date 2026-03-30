@@ -1,18 +1,5 @@
 from psychopy import event, core
 
-# for buttons
-def check_din_state(device):
-    device.updateRegisterCache()
-    current_din_state = device.din.getValue() # this gets the current digital input (DIN) register state = value of the bits.
-    print(f"current_din_state: {current_din_state}")
-
-# for pixel mode
-def check_dout_state(device):
-    device.updateRegisterCache()
-    current_dout_state = device.getVideoLine()
-    print(f"current_dout_state: {current_dout_state}")
-
-
 def escape_check(vpdevice=None, currentwindow=None):
     if event.getKeys(['escape', 'esc', 'entf']):
         print("Experiment terminated by user (ESC).")
@@ -43,7 +30,6 @@ def escape_check(vpdevice=None, currentwindow=None):
             pass
         core.quit()
 
-
 def cleanup():
     try:
         log_f.close() # event_f is 
@@ -58,3 +44,16 @@ def check_abort():
     if event.getKeys(keyList=["escape", "esc", "entf"]):
         cleanup()
 
+
+
+# for buttons
+def check_din_state(device):
+    device.updateRegisterCache()
+    current_din_state = device.din.getValue() # this gets the current digital input (DIN) register state = value of the bits.
+    print(f"current_din_state: {current_din_state}")
+
+# for pixel mode
+def check_dout_state(device):
+    device.updateRegisterCache()
+    current_dout_state = device.getVideoLine()
+    print(f"current_dout_state: {current_dout_state}")
