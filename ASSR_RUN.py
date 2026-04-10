@@ -1,6 +1,76 @@
 """
 to do
 - check if trial seq is correct
+
+
+
+
+
+- Change your background color to an even number (like 210 or 212) so that the last bit is 0. eg
+Python win = visual.Window(..., color=[212, 212, 212], colorSpace='rgb255')
+
+
+
+- turn pixel off:
+Summary of Logical Flow
+To ensure your pixels are always "defined" as we discussed:
+
+Start of Trial: Flip 1 (Stimulus + Trigger Pixel).
+
+Immediate Next Frame: Flip 2 (Stimulus + Background/Gray Pixel). This creates a pulse.
+
+End of Stimulus: Flip 3 (Fixation + Background/Gray Pixel).
+
+
+
+
+
+- Replacing core.wait(0.02) with Frame Timing
+You are currently using "Normal" time to let the trigger "settle":
+
+Python
+win.flip() 
+core.wait(0.02) # This is 20ms
+On your 120Hz monitor, one frame is 8.33ms. A core.wait(0.02) lasts about 2.4 frames. Because of how the computer's CPU talks to the GPU, this can cause "stuttering" in your visual stimuli.
+
+The Fix (Scenario B - Fixed Width):
+Use a frame-counting loop to ensure the trigger is exactly 2 frames (16.6ms) wide, then clear it. This is much cleaner for OPM-MEG analysis.
+
+Python
+# --- 3. PRESENTATION ---
+stimulus_to_draw.draw()
+draw_pixel(win, trigger_to_RGB(trigger_to_send))
+win.flip() # Frame 1: Trigger ON
+
+# Draw next frame immediately to turn trigger OFF
+stimulus_to_draw.draw() # Keep showing the arrow/fixation
+# Notice: we DO NOT call draw_pixel here, so it defaults to background
+win.flip() # Frame 2: Trigger OFF
+
+
+
+- The "Response Trigger" Latency
+In your response loop, you have this:
+
+Python
+if button_pressed == "red":
+    draw_pixel(win, trigger_to_RGB(TRIG_RESPONSE))
+    win.flip()
+Because you are using Pixel Mode, this trigger will only appear at the next monitor refresh. If the participant presses the button 1ms after a refresh, the trigger won't reach the MEG for another 7.3ms.
+
+The Insight:
+Since you are using device.din.setDinLog(), you actually have two records of the button press:
+
+The DIN Log: Recorded inside the DataPixx at microsecond precision (This is your "Gold Standard" for RT).
+
+The Pixel Trigger: Recorded in your MEG continuous data.
+
+Recommendation: Keep the pixel trigger for the button press (it's great for visual inspection of the MEG trace), but always use rt_dev (from the DIN log) for your statistical analysis of Reaction Times.
+
+
+- interpolate=False
+In your draw_pixel function, you have a comment: interpolate must be set to FALSE. This is crucial. If the GPU "blurs" (interpolates) your trigger pixel with the neighboring gray pixels, the color value will change, and the DataPixx will read the wrong trigger number. Ensure your visual.Rect or visual.Window has anti-aliasing/interpolation disabled for that specific area.
+
 """
 
 
@@ -27,11 +97,10 @@ global_clock = core.Clock()
 
 # -------------------- WINDOW --------------------------------
 monitor_settings = stim_monitor()
-
 # set fullscr to True in MSR
 win = visual.Window(
     monitor=monitor_settings['monitor_name'], size=monitor_settings['monitor_size_pix'], 
-    fullscr=True, 
+    fullscr=False, 
     units="deg", 
     color=[211, 211, 211],
     colorSpace='rgb255', 
@@ -73,20 +142,20 @@ trials = load_trials()
 
 # ============================================================================================
 # -------------------- INSTRUCTIONS --------------------
-# # instructions
-# instr.draw()
-# win.flip()
+# instructions
+instr.draw()
+win.flip()
 
-# flush_buttons(device, myLog)
+flush_buttons(device, myLog)
 
-# while True:
-#     button, _ = collect_response(device, myLog, buttonCodes) # read VPixx buttonbox
+while True:
+    button, _ = collect_response(device, myLog, buttonCodes) # read VPixx buttonbox
     
-#     if button in ["red"]: #, "green"]:
-#     #if event.getKeys(keyList=['r']): # for keyboard testing
-#         break
-#     if check_abort(): 
-#         core.quit()
+    if button in ["red"]: #, "green"]:
+    #if event.getKeys(keyList=['r']): # for keyboard testing
+        break
+    if check_abort(): 
+        core.quit()
 
 # -------------------- COUNTDOWN --------------------
 # for number in ["3", "2", "1"]:

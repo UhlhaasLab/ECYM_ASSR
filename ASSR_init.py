@@ -10,14 +10,14 @@ from pypixxlib.datapixx import DATAPixx3
 # TO BE CHANGED BY EXPERIMENTER (ONCE PER PARTICIPANT)
 # =================================================================
 SUB = "JOH4" # Participant abbreviation
-CONDITION = "ATT" # "PAS" or "ATT" (ATT=attVIS=attend to visual stim)
+CONDITION = "PAS" # "PAS" or "ATT" (ATT=attVIS=attend to visual stim)
 # =================================================================
 
 MRS = 0     # 0=no, 1=yes
 
 # -------------------------- PATHS -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))   # script location
-STIM_DIR = os.path.join(BASE_DIR, "ASSR-stimuli") 
+STIM_DIR = os.path.join(BASE_DIR, "ASSR-stimuli", "sounds") 
 SUB_DIR  = os.path.join(BASE_DIR, "ASSR-data", SUB)
 os.makedirs(SUB_DIR, exist_ok=True) # make the folder if doesn't exist already
 
@@ -157,7 +157,7 @@ def stim_monitor():
         monitor_size_pix    	= [1920, 1080] 
         monitor_name        	= "Laptop"
         refresh_rate        	= 60
-        screen_number           = 0
+        screen_number           = 1 # 0 for this screen, 1 for external screen
 
         # Set Monitor
         monitor = monitors.Monitor(monitor_name) 
@@ -213,9 +213,9 @@ def preload_tones(vpdevice, paths):
     vpdevice.audio.stopSchedule()
 
     # check length
-    loaded        = {}
-    total_samples = 0
-    common_fs     = None # assume same samling freq
+    loaded          = {}
+    total_samples   = 0
+    common_fs       = None # assume same samling freq
 
     for name, p in paths.items():
         x, fs, peak = _load_wav_float32(p)
@@ -313,17 +313,14 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
     
     if MRS == 1:
         # ======= AUDITORY
-        # create tone register/s
+        # create tone registers
         audio_reg = preload_tones(vpdevice, {
            'clicktrain':   os.path.join(stimulipath, 'sounds', 'clicktrain_40Hz_500ms.wav')
            # add here for MMN (, 'tone2': etc)
         })
-
         # load threshold
         thr_info  = load_threshold_csv(os.path.join(subjectpath, "round_2_hearing_threshold_1000.csv"))
-        thr_lin   = thr_info["threshold_amplitude"] # eg 0.00024
-        
-        # assign gains
+        thr_lin   = thr_info["threshold_amplitude"]
         audio_reg = assign_subject_gains(audio_reg, threshold_linear=thr_lin, per_tone_dBSL={'Aud_X': dB_SL, 'Aud_Y': dB_SL, 'Aud_FB': dB_SL-10})
         print(audio_reg)        
 
@@ -340,7 +337,7 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
 def preload_txt(win):   
    txt_intro_PAS = visual.TextStim(win, text="Schauen Sie während des Experiments auf die Mitte des Bildschirms. \n\n Drücken Sie den roten/rechten Knopf, um zu starten.", height=1, pos=(0, 0), units='deg', color='black')
    txt_intro_ATT = visual.TextStim(win, text="Drücken Sie rechten/roten Knopf, wenn Sie einen Pfeil sehen, der nach rechts zeigt: ▶ \n\n Drücken Sie den roten/rechten Knopf, um zu starten.", height=1, pos=(0, 0), units='deg', color='black')
-   txt_finished = visual.TextStim(win, text="Das Experiment ist fertig, danke!", height=1, pos=(0, 0), units='deg', color='black')
+   txt_finished = visual.TextStim(win, text="Vielen Dank!", height=1, pos=(0, 0), units='deg', color='black')
    
    return {"txt_intro_PAS": txt_intro_PAS, "txt_intro_ATT": txt_intro_ATT, "txt_finished": txt_finished}
 
