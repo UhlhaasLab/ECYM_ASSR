@@ -13,12 +13,11 @@ def trigger_to_RGB(trigger_number: int):
     return [green, blue]
     red = R = always 0 (as the first 8 bits are for buttonbox)
     """
-    return [0, (trigger_number)%256, (trigger_number>>8)%256]
+    return [ 0, (trigger_number)%256, (trigger_number>>8)%256]
 
 # ===================================== 2. DRAW PIXEL =====================================
 def draw_pixel(win, pixelValue):
-    """ draws pixel in topleft corner of window: window must cover top left of screen to work, interpolate must be set to FALSE before color is set, call this just before flip to ensure pixel is drawn over other stimuli """
-    
+    # draws pixel in topleft corner of window: window must cover top left of screen to work, interpolate must be set to FALSE before color is set, call this just before flip to ensure pixel is drawn over other stimuli
     pixel_square_size = 1 # For debugging, set a visible size. For the experiment, this can be 1.
 
     # The 'pos' of a Rect is its center. We calculate the center position. that places the square's top-left corner at the window's top-left corner.
@@ -40,8 +39,8 @@ def draw_pixel(win, pixelValue):
     
     pixel_square.draw()
 
-
 # ===================================== 3. DEBUGGING =====================================
+
 # erfans debug:
 def GB2trigger(color):
     """
