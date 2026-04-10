@@ -337,7 +337,7 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
 def preload_txt(win):   
    txt_intro_PAS = visual.TextStim(win, text="Schauen Sie während des Experiments auf die Mitte des Bildschirms. \n\n Drücken Sie den roten/rechten Knopf, um zu starten.", height=1, pos=(0, 0), units='deg', color='black')
    txt_intro_ATT = visual.TextStim(win, text="Drücken Sie rechten/roten Knopf, wenn Sie einen Pfeil sehen, der nach rechts zeigt: ▶ \n\n Drücken Sie den roten/rechten Knopf, um zu starten.", height=1, pos=(0, 0), units='deg', color='black')
-   txt_finished = visual.TextStim(win, text="Vielen Dank!", height=1, pos=(0, 0), units='deg', color='black')
+   txt_finished = visual.TextStim(win, text="Dieser Durchgang ist beendet.\n Vielen Dank. \n\n Bitte warten Sie auf Anweisungen.", height=1, pos=(0, 0), units='deg', color='black')
    
    return {"txt_intro_PAS": txt_intro_PAS, "txt_intro_ATT": txt_intro_ATT, "txt_finished": txt_finished}
 
