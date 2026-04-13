@@ -2,12 +2,8 @@
 to do
 - check if trial seq is correct
 
-
-- interpolate=False
-In your draw_pixel function, you have a comment: interpolate must be set to FALSE. This is crucial. If the GPU "blurs" (interpolates) your trigger pixel with the neighboring gray pixels, the color value will change, and the DataPixx will read the wrong trigger number. Ensure your visual.Rect or visual.Window has anti-aliasing/interpolation disabled for that specific area.
-
+- interpolate=False . In your draw_pixel function, you have a comment: interpolate must be set to FALSE. This is crucial. If the GPU "blurs" (interpolates) your trigger pixel with the neighboring gray pixels, the color value will change, and the DataPixx will read the wrong trigger number. Ensure your visual.Rect or visual.Window has anti-aliasing/interpolation disabled for that specific area.
 """
-
 
 import random, csv, time, os
 from psychopy import visual, core, event, sound
@@ -29,6 +25,7 @@ from utils.escape_cleanup_abort import check_abort, cleanup
 # -------------------- GENERAL --------------------
 timestamp = time.strftime('%Y%m%d_%H%M%S')
 global_clock = core.Clock()
+pixel_time = 0.016 # show the pixel for 2 frames
 
 # -------------------- WINDOW --------------------------------
 monitor_settings = stim_monitor()
@@ -37,7 +34,7 @@ win = visual.Window(
     monitor=monitor_settings['monitor_name'], size=monitor_settings['monitor_size_pix'], 
     fullscr=False, 
     units="deg", 
-    color=[211, 211, 211],
+    color=[212, 212, 212],
     colorSpace='rgb255', 
     #colorSpace='rgb',
     #colorSpace='rgb1',
@@ -80,13 +77,14 @@ trials = load_trials()
 # instructions
 instr.draw()
 win.flip()
+device.updateRegisterCache()
 
 flush_buttons(device, myLog)
 
 while True:
     button, _ = collect_response(device, myLog, buttonCodes) # read VPixx buttonbox
     
-    if button in ["red"]: #, "green"]:
+    if button in ["red"]:
     #if event.getKeys(keyList=['r']): # for keyboard testing
         break
     if check_abort(): 
@@ -100,17 +98,26 @@ while True:
 #     core.wait(1.0) # Show each number for 1 second
 
 # -------------------- INITIAL FIXATION --------------------
-# # 1. Show initial fixation + trigger and hold it
-# fix.draw()
-# draw_pixel(win, trigger_to_RGB(TRIG_START)) # Draw trigger pixel LAST
+# 1. Show initial fixation + trigger and hold it
+fix.draw()
+draw_pixel(win, trigger_to_RGB(TRIG_START)) # Draw trigger pixel LAST
+win.flip()  # display frame with trigger
 
-# win.flip()  # display frame with trigger
-# core.wait(0.02) # to let trigger pixeel settle
-# device.updateRegisterCache()    # sync DATAPixx
-# print_trigger_info(device, TRIG_START) 
+core.wait(pixel_time) # to let trigger pixeel settle
 
-# # 2. Hold this state for the specified duration
-# core.wait(1.0)
+# here check erfans which comes first, the core wait or dev.update.reg.cache
+device.updateRegisterCache()    # sync DATAPixx
+
+# here take erafns new one!!!!!! 
+print_trigger_info(device, TRIG_START) 
+
+# then only the fixation
+fix.draw()
+win.flip()
+# do i have to dev.update????
+
+# 2. Hold this state for the specified duration
+core.wait(1.0 - pixel_time)
 
 # -------------------- MAIN LOOP --------------------
 for trial_data in trials:
@@ -161,7 +168,7 @@ for trial_data in trials:
     # device.updateRegisterCache()
 
     win.flip() # this single flip executes stimulus, trigger and time logging simultaneously
-    core.wait(0.02) # to let trigger pixeel settle (ADAPT IN MRS)
+    core.wait(pixel_time) # to let trigger pixeel settle (ADAPT IN MRS)
     device.updateRegisterCache()
     print_trigger_info(device, trigger_to_send) # comment out after debugging
 
@@ -223,14 +230,14 @@ for trial_data in trials:
                             fix.draw()
                             draw_pixel(win, trigger_to_RGB(TRIG_RESPONSE))
                             win.flip()
-                            core.wait(0.02) # to let trigger pixeel settle (ADAPT IN MRS)
+                            core.wait(pixel_time) # to let trigger pixeel settle (ADAPT IN MRS)
                             device.updateRegisterCache()
                             print_trigger_info(device, TRIG_RESPONSE) 
 
                             # Go back to the "off" state immediately
                             fix.draw()
                             win.flip()
-                            core.wait(0.02) # to let trigger pixel settle (ADAPT IN MRS)
+                            core.wait(pixel_time) # to let trigger pixel settle (ADAPT IN MRS)
                             device.updateRegisterCache()
 
                         elif arrow_type == "left":
