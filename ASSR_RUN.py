@@ -24,7 +24,7 @@ from utils.escape_cleanup_abort import check_abort, cleanup
 
 # -------------------- GENERAL --------------------
 timestamp = time.strftime('%Y%m%d_%H%M%S')
-global_clock = core.Clock()
+psychopy_clock = core.Clock()
 pixel_time = 0.016 # show the pixel for 2 frames
 
 # -------------------- WINDOW --------------------------------
@@ -56,7 +56,9 @@ instr = txt_dict["txt_intro_PAS"] if CONDITION == "PAS" else txt_dict["txt_intro
 txt_finished = txt_dict["txt_finished"]
 
 stim = preload_stimuli(win, STIM_DIR, SUB_DIR, device, dB_SL=60)
+# audio
 audio_reg = stim["Audio"]
+# visual
 fix = stim["fix_dot"]
 arrow_stim = stim["arrow_stim"]
 
@@ -96,6 +98,7 @@ while True:
 #     countdown_text.draw()
 #     win.flip()
 #     core.wait(1.0) # Show each number for 1 second
+print(f"Starting Run {CONDITION}...")
 
 # -------------------- INITIAL FIXATION --------------------
 # 1. Show initial fixation + trigger and hold it
@@ -109,7 +112,7 @@ core.wait(pixel_time) # to let trigger pixeel settle
 device.updateRegisterCache()    # sync DATAPixx
 
 # here take erafns new one!!!!!! 
-print_trigger_info(device, TRIG_START) 
+#print_trigger_info(device, TRIG_START) 
 
 # then only the fixation
 fix.draw()
@@ -128,7 +131,7 @@ for trial_data in trials:
     rt_psy, rt_dev = "NaN", "NaN"
     arrow_onset_psy, arrow_onset_dev = None, None
     arrow_type = trial_data["arrow"]
-    trial_onset_psy = global_clock.getTime() # Record the planned start time for precise SOA control
+    trial_onset_psy = psychopy_clock.getTime() # Record the planned start time for precise SOA control
 
     response_key = "NaN"
     if CONDITION == "ATT" and arrow_type in ["right"]:
@@ -136,41 +139,43 @@ for trial_data in trials:
 
     # --- 2. Map trial type to trigger ---
     if arrow_type == "none":
-        stimulus_to_draw = fix
+        stim_to_draw = fix
         trigger_to_send = TRIG_SOUND_no_arr
     elif arrow_type == "left":
         arrow_stim.ori = 180  # Point left
-        stimulus_to_draw = arrow_stim
+        stim_to_draw = arrow_stim
         trigger_to_send = TRIG_L_ARR
     else:  # Right arrow
         arrow_stim.ori = 0  # Point right
-        stimulus_to_draw = arrow_stim
+        stim_to_draw = arrow_stim
         trigger_to_send = TRIG_R_ARR
     
 
     # --- 3. PRESENTATION Sound + Visual + Trigger ---
-    stimulus_to_draw.draw() # Draw the visual stimulus (either fixation or arrow)
-    draw_pixel(win, trigger_to_RGB(trigger_to_send)) # Draw trigger pixel
- 
-    win.callOnFlip(lambda: flip_marks.setdefault("t_onset_dev", device.getTime()))
-    win.callOnFlip(lambda: flip_marks.setdefault("t_onset_psy", global_clock.getTime()))
-    win.callOnFlip(audio_reg.play)  # audio exactly on flip -> THIS WORKS IN PSYCHOPY
-
-
+    stim_to_draw.draw() # Draw the visual stimulus (either fixation or arrow)
+     
+    # audio for psychopy
+    #win.callOnFlip(audio_reg.play)  # audio exactly on flip -> THIS WORKS IN PSYCHOPY
     
+    # audio for vpixx
+    infoaud_fb = audio_reg
+    device.audio.stopSchedule()
+    device.audio.setAudioSchedule(0.0, infoaud_fb['fs'], infoaud_fb['n'], 'mono')
+    device.audio.setReadAddress(infoaud_fb['addr'])
+    device.audio.startSchedule()
+    device.updateRegisterCache()
 
-    # infoaud_fb = stimuli['Audio']['Aud_FB']
-    # infoaud_fb = audio_reg
-    # device.audio.stopSchedule()
-    # device.audio.setAudioSchedule(0.0, infoaud_fb['fs'], infoaud_fb['n'], 'mono')
-    # device.audio.setReadAddress(infoaud_fb['addr'])
-    # device.audio.startSchedule()
-    # device.updateRegisterCache()
+    draw_pixel(win, trigger_to_RGB(trigger_to_send)) # Draw trigger pixel
+
+    win.callOnFlip(lambda: flip_marks.setdefault("t_onset_dev", device.getTime()))
+    win.callOnFlip(lambda: flip_marks.setdefault("t_onset_psy", psychopy_clock.getTime()))
 
     win.flip() # this single flip executes stimulus, trigger and time logging simultaneously
     core.wait(pixel_time) # to let trigger pixeel settle (ADAPT IN MRS)
     device.updateRegisterCache()
-    print_trigger_info(device, trigger_to_send) # comment out after debugging
+    #print_trigger_info(device, trigger_to_send) # comment out after debugging
+
+
 
     # Store the precise onset times
     sound_onset_psy = flip_marks.get("t_onset_psy")
@@ -196,8 +201,11 @@ for trial_data in trials:
     response_collected = False # Use a simple flag to ensure we only log one press
     flush_buttons(device, myLog)
 
+    print(f"Starting Run {CONDITION}...")
+
     # Now, wait for the rest of the SOA while collecting responses
-    while global_clock.getTime() < trial_onset_psy + SOA:        
+    while psychopy_clock.getTime() < trial_onset_psy + SOA:        
+        
         # Only check for responses in the ATTEND condition and if one hasn't been logged yet
         if CONDITION == "ATT" and not response_collected:
                 response = collect_response(device, myLog, buttonCodes)
@@ -209,7 +217,7 @@ for trial_data in trials:
                     # keys = event.getKeys(keyList=['r'])
                     # if keys:
                     #     button_pressed = 'red'
-                    #     t_dev = global_clock.getTime()
+                    #     t_dev = psychopy_clock.getTime()
                     # ##### comment above out
 
                     # We only care about the "red" button, but now we check what it means
@@ -220,7 +228,7 @@ for trial_data in trials:
                         
                         # Log the reaction times regardless of correctness
                         rt_dev = t_dev - sound_onset_dev
-                        rt_psy = global_clock.getTime() - sound_onset_psy
+                        rt_psy = psychopy_clock.getTime() - sound_onset_psy
                         
                         # Now, evaluate the response based on the arrow type
                         if arrow_type == "right":
@@ -232,7 +240,7 @@ for trial_data in trials:
                             win.flip()
                             core.wait(pixel_time) # to let trigger pixeel settle (ADAPT IN MRS)
                             device.updateRegisterCache()
-                            print_trigger_info(device, TRIG_RESPONSE) 
+                            #print_trigger_info(device, TRIG_RESPONSE) 
 
                             # Go back to the "off" state immediately
                             fix.draw()
