@@ -43,6 +43,10 @@ win = visual.Window(
 win.mouseVisible = False
 mouse = event.Mouse(visible=False) 
 
+frameRate = win.getActualFrameRate()
+frameDur = 1.0 / frameRate if frameRate else win.monitorFramePeriod
+n_frames_total = round(ARROW_DUR / frameDur)
+
 # -------------------- LOGGING SETUP --------------------
 log_file = os.path.join(SUB_DIR, f"{SUB}_{CONDITION}_log_{timestamp}.csv")
 log_f = open(log_file, "w", newline="", encoding="utf-8")
@@ -178,27 +182,26 @@ for trial_data in trials:
     # store sound onset times
     sound_onset_psy = flip_marks["t_onset_psy"]
     sound_onset_dev = flip_marks["t_onset_dev"]
-    # arrow onset: if shown, its onset is the same as the sound's
+    # store arrow onset times: if shown, its onset is the same as the sound's
     if arrow_type != "none":
         arrow_onset_psy = sound_onset_psy
         arrow_onset_dev = sound_onset_dev
 
-    core.wait(pixel_time) # Let trigger pixel settle for 2 frames
-    # print_trigger_info(device, trigger_to_send) # comment out after debugging
-    
-
-    # ========== 2. STIMULUS ONLY / turn trigger "off"
-    # Clear the trigger pixel on the very next frame
+    # ========== SECOND FRAME
+    # now instead of core.wait(pixel_time), the second frame shows the pixel, and the thrid only the stim
+    # frame 2 (keep trigger ON)
     stim_to_draw.draw()
-    win.flip() # This flip is less critical, so no cache update needed unless i need its timestamp.
+    draw_pixel(win, trigger_to_RGB(trigger_to_send))
+    win.flip()
 
-    # wait remaining arrow duration (if there is an arrow)
+    # ========== REMAINING FRAMES: STIMULUS ONLY / turn trigger "off"
     if arrow_type != "none":
-        core.wait(ARROW_DUR - pixel_time) # wait 200ms minus the time we already waited with the trigger pixel on
-        fix.draw() # After the duration, replace arrow with fixation dot
-        win.flip()
+        # remaining frames (stim only)
+        for _ in range(max(0, n_frames_total - 2)):
+            stim_to_draw.draw()
+            win.flip()
 
-    # ========== 3. FIXATION + RESPONSE WINDOW
+    # ========== then: FIXATION + RESPONSE WINDOW
     fix.draw()
     win.flip()
 
@@ -237,16 +240,20 @@ for trial_data in trials:
                             # This is a correct response (a "hit")
                             response_key = "red"
 
-                            # send response trigger
+                            # frame 1: send response trigger
                             fix.draw()
                             draw_pixel(win, trigger_to_RGB(TRIG_RESPONSE))
                             
                             device.updateRegCacheAfterVideoSync()
                             win.flip()
                             #print_trigger_info(device, TRIG_RESPONSE) 
-                            core.wait(pixel_time) # to let trigger pixeel settle (ADAPT IN MRS)
                             
-                            # clear response trigger
+                            # frame 2: keep trigger
+                            fix.draw()
+                            draw_pixel(win, trigger_to_RGB(TRIG_RESPONSE))
+                            win.flip()
+
+                            # frame 3: clear response trigger
                             fix.draw()
                             win.callOnFlip(device.updateRegCacheAfterVideoSync)
                             win.flip()
