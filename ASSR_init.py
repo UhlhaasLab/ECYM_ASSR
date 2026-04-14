@@ -122,16 +122,14 @@ device.updateRegisterCache()
 
 ## MONITOR
 def stim_monitor():
-    if MRS == 1:
-        # "OPM": {"width_cm": 78, "dist_cm": 122, "res_pix": [1920, 1080], "name": "OPM_Monitor", "refresh_rate": 120, "screen_idx": 2}
-
-        # Monitor/Experiment settings 
-        viewing_distance_cm 	= 122
-        monitor_width_cm    	= 78
+    if MRS == 0:
+        # "Laptop": {"width_cm": 34.5, "dist_cm": 40, "res_pix": [1920, 1080], "name": "Laptop", "refresh_rate": 60, "screen_idx": 0},
+        viewing_distance_cm 	= 40
+        monitor_width_cm    	= 34.5
         monitor_size_pix    	= [1920, 1080] 
-        monitor_name        	= "OPM_Monitor"
-        refresh_rate        	= 120
-        screen_number           = 2 # 01.22.2026
+        monitor_name        	= "Laptop"
+        refresh_rate        	= 60
+        screen_number           = 1 # 0 or 2 for this screen, 1 for external screen
 
         # Set Monitor
         monitor = monitors.Monitor(monitor_name) 
@@ -150,14 +148,16 @@ def stim_monitor():
             "screen_number":        screen_number
         }
 
-    if MRS == 0:
-        # "Laptop": {"width_cm": 34.5, "dist_cm": 40, "res_pix": [1920, 1080], "name": "Laptop", "refresh_rate": 60, "screen_idx": 0},
-        viewing_distance_cm 	= 40
-        monitor_width_cm    	= 34.5
+    if MRS == 1:
+        # "OPM": {"width_cm": 78, "dist_cm": 122, "res_pix": [1920, 1080], "name": "OPM_Monitor", "refresh_rate": 120, "screen_idx": 2}
+
+        # Monitor/Experiment settings 
+        viewing_distance_cm 	= 122
+        monitor_width_cm    	= 78
         monitor_size_pix    	= [1920, 1080] 
-        monitor_name        	= "Laptop"
-        refresh_rate        	= 60
-        screen_number           = 1 # 0 or 2 for this screen, 1 for external screen
+        monitor_name        	= "OPM_Monitor"
+        refresh_rate        	= 120
+        screen_number           = 2 # 01.22.2026
 
         # Set Monitor
         monitor = monitors.Monitor(monitor_name) 

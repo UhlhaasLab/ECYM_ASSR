@@ -107,7 +107,7 @@ while True:
 #     countdown_text.draw()
 #     win.flip()
 #     core.wait(1.0) # Show each number for 1 second
-print(f"Starting Run {CONDITION}...")
+print(f"Starting CONDITION {CONDITION}...")
 
 # -------------------- INITIAL FIXATION --------------------
 # 1. Show initial fixation + trigger and hold it
@@ -119,16 +119,23 @@ win.flip()  # display frame with trigger
 device.updateRegisterCache()    # sync DATAPixx
 
 core.wait(pixel_time) # to let trigger pixeel settle
-# here take erafns new one!!!!!! 
-#print_trigger_info(device, TRIG_START) 
+
+# debug
+print(f"TRIG START ON {TRIG_START} = {trigger_to_RGB(TRIG_START)}")
+print_trigger_info(device)
+print("")
 
 # then only the fixation
 fix.draw()
 win.flip()
-# do i have to dev.update????
 
 # 2. Hold this state for the specified duration
 core.wait(1.0 - pixel_time)
+
+# debug
+print(f"TRIG START OFF")
+print_trigger_info(device)
+print("")
 
 # -------------------- MAIN LOOP --------------------
 for trial_data in trials:
@@ -195,9 +202,12 @@ for trial_data in trials:
         arrow_onset_dev = sound_onset_dev
 
     core.wait(pixel_time) # Let trigger pixel settle for 2 frames
-    # print_trigger_info(device, trigger_to_send) # comment out after debugging
-    
 
+    # debug
+    print(f"TRIG ON {trigger_to_send} = {trigger_to_RGB(trigger_to_send)}")
+    print_trigger_info(device)
+    print("")
+    
     # ========== 2. STIMULUS ONLY / turn trigger "off"
     # Clear the trigger pixel on the very next frame
     stim_to_draw.draw()
@@ -212,6 +222,11 @@ for trial_data in trials:
     # ========== 3. FIXATION + RESPONSE WINDOW
     fix.draw()
     win.flip()
+
+    # debug
+    print(f"TRIG OFF")
+    print_trigger_info(device)
+    print("")
 
     response_collected = False # Use a simple flag to ensure we only log one press
     flush_buttons(device, myLog)
