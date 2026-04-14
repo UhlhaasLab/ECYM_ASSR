@@ -10,7 +10,7 @@ from pypixxlib.datapixx import DATAPixx3
 # TO BE CHANGED BY EXPERIMENTER (ONCE PER PARTICIPANT)
 # =================================================================
 SUB = "JOH4" # Participant abbreviation
-CONDITION = "PAS" # "PAS" or "ATT" (ATT=attVIS=attend to visual stim)
+CONDITION = "ATT" # "PAS" or "ATT" (ATT=attVIS=attend to visual stim)
 # =================================================================
 
 MRS = 0     # 0=no, 1=yes
@@ -31,8 +31,8 @@ TRIG_R_ARR        = 350  # Sound presented simultaneously with a RIGHT arrow
 TRIG_RESPONSE     = 500  # Participant response (red/right button press)
 
 # ------------------- TRIAL STRUCTURE ----------------------------
-SOA = 1.5               # sec
-ARROW_DUR = 0.2 # or 150ms?
+SOA = 1.5           # sec
+ARROW_DUR = 0.2     # or 150ms?
 
 N_NO_ARROW = 145    # number of no arrow trials 
 N_LEFT = 29         # number of left arrows
@@ -157,7 +157,7 @@ def stim_monitor():
         monitor_size_pix    	= [1920, 1080] 
         monitor_name        	= "Laptop"
         refresh_rate        	= 60
-        screen_number           = 1 # 0 for this screen, 1 for external screen
+        screen_number           = 1 # 0 or 2 for this screen, 1 for external screen
 
         # Set Monitor
         monitor = monitors.Monitor(monitor_name) 
@@ -180,22 +180,10 @@ def stim_monitor():
 FS = 48000 # audio sample rate. audio_sampling_frequency # chage to new one, 44000 i think
 
 AUDIO_BASE_ADDR = int(16e6) # adress in vpixx device (where the audio gets stored)
+HEARING_THRESHOLD = 0.0007 # will be taken from csv
 
-# all 4 below needed for 5th. (5th is the only one to be used in RUN-py)
-#HEARING_THRESHOLD = 0.0007 # will be taken from csv
 
-## this is the actual correct one
-def load_threshold_csv(subjectpath):
-    # Load Subject-Specific Hearing Threshold
-    with open(subjectpath, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        row = next(reader)
-    return {
-        "subject_id": row["subject_id"],
-        "threshold_db": float(row["threshold_db"]),
-        "threshold_amplitude": float(row["threshold_amplitude"]),
-        }
-
+# 1a. for next, preload_tones (load .wav files as float32 as vpixx audio buffer expects that. also convert to mono if needed, and get the peak value for later gain calculations)
 def _load_wav_float32(audiofilespath):
     # Load .wav tone files
     audiofile, samplingfreq = sf.read(audiofilespath, dtype='float32')
@@ -207,6 +195,7 @@ def _load_wav_float32(audiofilespath):
 
     return audiofile, int(samplingfreq), peak
     
+# 1b. for preload_stimuli (preload tones into vpixx audio buffer and create registry with addresses and sample counts for each tone
 def preload_tones(vpdevice, paths):
     # preload tones into buffer
     reg = {}
@@ -276,6 +265,21 @@ def preload_tones(vpdevice, paths):
         offset_samples += n_samples
     return reg
 
+
+# 2. for preload_stimuli
+def load_threshold_csv(subjectpath):
+    # Load Subject-Specific Hearing Threshold
+    with open(subjectpath, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        row = next(reader)
+    return {
+        "subject_id": row["subject_id"],
+        "threshold_db": float(row["threshold_db"]),
+        "threshold_amplitude": float(row["threshold_amplitude"]),
+        }
+
+
+# 3. for preload_stimuli (calculate and assign subject-specific gains based on hearing threshold and desired dB SL for each tone)
 def assign_subject_gains(in_audio_reg, threshold_linear, per_tone_dBSL, master=1.0):
     # include gain in the register
     for name, info in in_audio_reg.items():
@@ -283,8 +287,8 @@ def assign_subject_gains(in_audio_reg, threshold_linear, per_tone_dBSL, master=1
         this_dBSL       = per_tone_dBSL.get(name)
         gain            = master * threshold_linear * (10.0 ** (this_dBSL / 20.0)) / max(peak, 1e-12)
         info['gain']    = float(max(0.0, min(1.0, gain)))  # clamp to [0,1]
-    return in_audio_reg
 
+    return in_audio_reg
 
 
 # --------------------------PRELOAD STIMULI AND TEXT ---------------
@@ -318,6 +322,7 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
            'clicktrain':   os.path.join(stimulipath, 'sounds', 'clicktrain_40Hz_500ms.wav')
            # add here for MMN (, 'tone2': etc)
         })
+
         # load threshold
         thr_info  = load_threshold_csv(os.path.join(subjectpath, "round_2_hearing_threshold_1000.csv"))
         thr_lin   = thr_info["threshold_amplitude"]
@@ -331,7 +336,6 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
         
         return {"Audio": audio_reg, "fix_dot": fix_dot, "arrow_stim": arrow_stim}
     
-
 
 # preload text
 def preload_txt(win):   

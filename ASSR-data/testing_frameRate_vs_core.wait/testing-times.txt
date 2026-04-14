@@ -1,0 +1,11 @@
+tested both versions: 
+ASSR_RUN 	   = win.flip, core.wait(2 frames), 	win.flip
+    vs.
+ASSR_RUN_framerate = win.flip, win.flip, 		win.flip
+
+(times are nearly perfect between psychopy and vpixx simulator)
+
+and times between both timing versions are also mostly 0ms difference, max. 2ms differences = neglectable.
+
+keep core.wait version
+

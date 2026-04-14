@@ -18,7 +18,7 @@ def trigger_to_RGB(trigger_number: int):
 # ===================================== 2. DRAW PIXEL =====================================
 def draw_pixel(win, pixelValue):
     # draws pixel in topleft corner of window: window must cover top left of screen to work, interpolate must be set to FALSE before color is set, call this just before flip to ensure pixel is drawn over other stimuli
-    pixel_square_size = 1 # For debugging, set a visible size. For the experiment, this can be 1.
+    pixel_square_size = 200 # For debugging, set a visible size. For the experiment, this can be 1.
 
     # The 'pos' of a Rect is its center. We calculate the center position. that places the square's top-left corner at the window's top-left corner.
     x_pos = -win.size[0]/2 + pixel_square_size/2

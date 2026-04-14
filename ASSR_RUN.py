@@ -3,12 +3,17 @@ to do
 - check if trial seq is correct
 
 - interpolate=False . In your draw_pixel function, you have a comment: interpolate must be set to FALSE. This is crucial. If the GPU "blurs" (interpolates) your trigger pixel with the neighboring gray pixels, the color value will change, and the DataPixx will read the wrong trigger number. Ensure your visual.Rect or visual.Window has anti-aliasing/interpolation disabled for that specific area.
+
+- move stuff to init
+
+TINEKE:
+- for now it sends triggers when correct response. can take out right?
 """
 
 import random, csv, time, os
 from psychopy import visual, core, event, sound
 
-from ASSR_init import (SUB, CONDITION, SUB_DIR, STIM_DIR, SOA, ARROW_DUR,
+from ASSR_init import (SUB, CONDITION, MRS, SUB_DIR, STIM_DIR, SOA, ARROW_DUR,
                         # triggers
                         TRIG_START,
                         TRIG_SOUND_no_arr, TRIG_L_ARR, TRIG_R_ARR, 
@@ -25,6 +30,10 @@ from utils.escape_cleanup_abort import check_abort, cleanup
 # -------------------- GENERAL --------------------
 timestamp = time.strftime('%Y%m%d_%H%M%S')
 psychopy_clock = core.Clock()
+
+# frame rate presentation VS core.wait.
+# frame rate: either use monitor_rr refresh rate, or just show it for two flips.
+# core.wait(0.016) is 2 frame rates in MSR, on laptop it is 0.032
 pixel_time = 0.016 # show the pixel for 2 frames
 
 # -------------------- WINDOW --------------------------------
@@ -32,7 +41,7 @@ monitor_settings = stim_monitor()
 # set fullscr to True in MSR
 win = visual.Window(
     monitor=monitor_settings['monitor_name'], size=monitor_settings['monitor_size_pix'], 
-    fullscr=False, 
+    fullscr=True, 
     units="deg", 
     color=[212, 212, 212],
     colorSpace='rgb255', 
@@ -50,7 +59,7 @@ log_writer = csv.writer(log_f)
 log_writer.writerow(["trial_index","arrow","sound_onset_psy","sound_onset_dev",
                      "arrow_onset_psy","arrow_onset_dev","response_key","rt_psy","rt_dev"])
 
-# -------------------- PRELOAD STIMULI & TEXT --------------------
+# -------------------- PRELOAD TEXT & STIMULI --------------------
 txt_dict = preload_txt(win)
 instr = txt_dict["txt_intro_PAS"] if CONDITION == "PAS" else txt_dict["txt_intro_ATT"]
 txt_finished = txt_dict["txt_finished"]
@@ -104,13 +113,12 @@ print(f"Starting Run {CONDITION}...")
 # 1. Show initial fixation + trigger and hold it
 fix.draw()
 draw_pixel(win, trigger_to_RGB(TRIG_START)) # Draw trigger pixel LAST
+
 win.flip()  # display frame with trigger
-
-core.wait(pixel_time) # to let trigger pixeel settle
-
 # here check erfans which comes first, the core wait or dev.update.reg.cache
 device.updateRegisterCache()    # sync DATAPixx
 
+core.wait(pixel_time) # to let trigger pixeel settle
 # here take erafns new one!!!!!! 
 #print_trigger_info(device, TRIG_START) 
 
@@ -155,15 +163,18 @@ for trial_data in trials:
     # ========== 1. FIRST FRAME: stim + trigger + audio (VSync locked)
     stim_to_draw.draw() # Draw the visual stimulus (either fixation or arrow)
      
-    # audio for psychopy
-    #win.callOnFlip(audio_reg.play)  # audio exactly on flip -> THIS WORKS IN PSYCHOPY
+    if MRS == 0:
+        # AUDIO PSYCHOPY
+        win.callOnFlip(audio_reg.play)  # audio exactly on flip -> THIS WORKS IN PSYCHOPY
     
-    # prepare VPixx audio (not executed yet)
-    infoaud_fb = audio_reg
-    device.audio.stopSchedule()
-    device.audio.setAudioSchedule(0.0, infoaud_fb['fs'], infoaud_fb['n'], 'mono')
-    device.audio.setReadAddress(infoaud_fb['addr'])
-    device.audio.startSchedule()
+    if MRS == 1:
+        # AUDIO VPIXX  -----------> ADAPT? make wihtout "if"?
+        # prepare audio, not execute yet
+        infoaud_fb = audio_reg
+        device.audio.stopSchedule()
+        device.audio.setAudioSchedule(0.0, infoaud_fb['fs'], infoaud_fb['n'], 'mono')
+        device.audio.setReadAddress(infoaud_fb['addr'])
+        device.audio.startSchedule()
         
     draw_pixel(win, trigger_to_RGB(trigger_to_send)) # Draw trigger pixel (latched at flip)
 
@@ -176,8 +187,8 @@ for trial_data in trials:
     win.flip()  # FLIP = visual + trigger + audio start aligned
 
     # store sound onset times
-    sound_onset_psy = flip_marks["t_onset_psy"]
     sound_onset_dev = flip_marks["t_onset_dev"]
+    sound_onset_psy = flip_marks["t_onset_psy"]
     # arrow onset: if shown, its onset is the same as the sound's
     if arrow_type != "none":
         arrow_onset_psy = sound_onset_psy
