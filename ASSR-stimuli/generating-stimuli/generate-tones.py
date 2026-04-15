@@ -1,10 +1,8 @@
-"""
-make_click_trains.py
-Generates 500 ms click trains (1 ms rarefaction clicks) at 20, 40 and 60 Hz
-and saves them as WAV files to:
-C:\PC fix\#jobs\01_PhD\01_exp\ECYM-exp\ASSR\ASSR-psychopy\generating-stimuli
+""" Generates 500 ms click trains (1 ms rarefaction clicks) at 40Hz 
 
-Labelled steps included.
+parameters taken from AMP SCZ:
+https://www.nature.com/articles/s41537-025-00622-0#Sec9
+--> check if ok/ask tineke?
 """
 
 import numpy as np
@@ -12,11 +10,17 @@ from scipy.io import wavfile
 from pathlib import Path
 
 # ----------------- STEP 0: PARAMETERS -----------------
-fs = 44000                # sampling rate (Hz)
+############# should this fs be changed? to what
+fs = 44000  # sampling rate (Hz)
+#############
+
+
+
 click_ms = 1.0            # click duration in milliseconds
 trial_duration_s = 0.5    # 500 ms click-train
 
-out_dir = Path(r"C:\PC fix\#jobs\01_PhD\01_exp\ECYM-exp\ASSR\ASSR-psychopy\generating-stimuli")
+# outdir should be in the same folder as this script
+out_dir = Path(__file__)
 out_dir.mkdir(parents=True, exist_ok=True)
 
 # amplitudes
