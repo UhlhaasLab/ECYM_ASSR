@@ -23,18 +23,13 @@ from ASSR_init import (SUB, CONDITION, MRS, SUB_DIR, STIM_DIR, SOA, ARROW_DUR,
                         # preload
                         preload_stimuli, preload_txt)
 
-from utils.pixel_mode           import trigger_to_RGB, draw_pixel, print_trigger_info
+from utils.pixel_mode           import pixel_time, trigger_to_RGB, draw_pixel, print_trigger_info
 from utils.buttons              import collect_response, flush_buttons
 from utils.escape_cleanup_abort import check_abort, cleanup
 
 # -------------------- GENERAL --------------------
 timestamp = time.strftime('%Y%m%d_%H%M%S')
 psychopy_clock = core.Clock()
-
-# frame rate presentation VS core.wait.
-# frame rate: either use monitor_rr refresh rate, or just show it for two flips.
-# core.wait(0.016) is 2 frame rates in MSR, on laptop it is 0.032
-pixel_time = 0.016 # show the pixel for 2 frames
 
 # -------------------- WINDOW --------------------------------
 monitor_settings = stim_monitor()

@@ -6,6 +6,11 @@
 
 from psychopy import visual
 
+# frame rate presentation VS core.wait.
+# frame rate: either use monitor_rr refresh rate, or just show it for two flips.
+# core.wait(0.016) is 2 frame rates in MSR, on laptop it is 0.032
+pixel_time = 0.016 # show the pixel for 2 frames
+
 # ===================================== 1. CONVERT TRIGGER NUMBER TO RGB =====================================
 def trigger_to_RGB(trigger: int):
     if not (0 <= trigger <= 65535):

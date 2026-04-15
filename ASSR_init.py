@@ -7,11 +7,18 @@ from psychopy import visual, core, event, monitors, logging, sound
 from pypixxlib.datapixx import DATAPixx3
 
 # =================================================================
-# TO BE CHANGED BY EXPERIMENTER (ONCE PER PARTICIPANT)
+# TO BE CHANGED BY EXPERIMENTER
+# 
+# run only ONCE
 # =================================================================
-SUB = "JOH4" # Participant abbreviation
-CONDITION = "ATT" # "PAS" or "ATT" (ATT=attVIS=attend to visual stim)
+SUB = "JOH4"
+CONDITION = "ATT"   # "PAS" or "ATT" (ATT=attVIS=attend to visual stim)
 # =================================================================
+
+
+
+
+
 
 MRS = 0     # 0=no, 1=yes
 
@@ -176,14 +183,14 @@ def stim_monitor():
             "screen_number":        screen_number
         }
 
+
 # -------------------------- AUDIO SETTINGS --------------------------
 FS = 48000 # audio sample rate. audio_sampling_frequency # chage to new one, 44000 i think
 
 AUDIO_BASE_ADDR = int(16e6) # adress in vpixx device (where the audio gets stored)
-HEARING_THRESHOLD = 0.0007 # will be taken from csv
 
-
-# 1a. for next, preload_tones (load .wav files as float32 as vpixx audio buffer expects that. also convert to mono if needed, and get the peak value for later gain calculations)
+## 1. LOAD AUDIO FILES AS FLOAT32 INTO VPixx AUDIO BUFFER
+#  needed for preload_tones one below (load .wav files as float32 as vpixx audio buffer expects that. also convert to mono if needed, and get the peak value for later gain calculations)
 def _load_wav_float32(audiofilespath):
     # Load .wav tone files
     audiofile, samplingfreq = sf.read(audiofilespath, dtype='float32')
@@ -195,7 +202,7 @@ def _load_wav_float32(audiofilespath):
 
     return audiofile, int(samplingfreq), peak
     
-# 1b. for preload_stimuli (preload tones into vpixx audio buffer and create registry with addresses and sample counts for each tone
+#  this actually loads them into buffer + creates registry for all samples 
 def preload_tones(vpdevice, paths):
     # preload tones into buffer
     reg = {}
@@ -231,7 +238,7 @@ def preload_tones(vpdevice, paths):
     print(f"[AUDIO] buffer size (bytes): {buf_bytes}")
     print(f"[AUDIO] total samples to write: {total_samples} -> {total_samples * 2} bytes")
     
-    bytes_needed = total_samples * 2
+    bytes_needed = total_samples * 2 # why this line?
 
     # build one big bank
     all_arrays = [loaded[name][0] for name in paths.keys()]
@@ -266,7 +273,8 @@ def preload_tones(vpdevice, paths):
     return reg
 
 
-# 2. for preload_stimuli
+## 2. MAKES VOLUME SAME FOR EACH PARTICIPANT
+#  just loads csv
 def load_threshold_csv(subjectpath):
     # Load Subject-Specific Hearing Threshold
     with open(subjectpath, "r", encoding="utf-8") as f:
@@ -278,8 +286,7 @@ def load_threshold_csv(subjectpath):
         "threshold_amplitude": float(row["threshold_amplitude"]),
         }
 
-
-# 3. for preload_stimuli (calculate and assign subject-specific gains based on hearing threshold and desired dB SL for each tone)
+#  then adds gains to regsitry
 def assign_subject_gains(in_audio_reg, threshold_linear, per_tone_dBSL, master=1.0):
     # include gain in the register
     for name, info in in_audio_reg.items():
@@ -290,9 +297,8 @@ def assign_subject_gains(in_audio_reg, threshold_linear, per_tone_dBSL, master=1
 
     return in_audio_reg
 
-
 # --------------------------PRELOAD STIMULI AND TEXT ---------------
-fixation_angle 	= 0.5
+fixation_angle = 1 # 0.5 # 0.5 looks good, maybe a bit too small? ----> ADAPT
 
 # dB_SL=60 or 65 or 50
 def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
@@ -300,7 +306,8 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
         # ======= AUDITORY
         FS = 48000 
         HEARING_THRESHOLD = 0.0007
-        DB_ABOVE_THRESHOLD = 60 # then delete
+
+        DB_ABOVE_THRESHOLD = 60
         attenuation_factor = 10 ** (DB_ABOVE_THRESHOLD / 20)
         SOUND_VOLUME = HEARING_THRESHOLD * attenuation_factor
         SOUND_VOLUME = min(SOUND_VOLUME, 1.0)
@@ -319,11 +326,10 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
         # ======= AUDITORY
         # create tone registers
         audio_reg = preload_tones(vpdevice, {
-           'clicktrain':   os.path.join(stimulipath, 'sounds', 'clicktrain_40Hz_500ms.wav')
-           # add here for MMN (, 'tone2': etc)
+           'clicktrain': os.path.join(stimulipath, 'sounds', 'clicktrain_40Hz_500ms.wav')
         })
 
-        # load threshold
+        # load threshold & add gains
         thr_info  = load_threshold_csv(os.path.join(subjectpath, "round_2_hearing_threshold_1000.csv"))
         thr_lin   = thr_info["threshold_amplitude"]
         audio_reg = assign_subject_gains(audio_reg, threshold_linear=thr_lin, per_tone_dBSL={'Aud_X': dB_SL, 'Aud_Y': dB_SL, 'Aud_FB': dB_SL-10})
@@ -346,7 +352,6 @@ def preload_txt(win):
    return {"txt_intro_PAS": txt_intro_PAS, "txt_intro_ATT": txt_intro_ATT, "txt_finished": txt_finished}
 
 
-
 # =================================================================
 # This block makes the script executable for one-time setup
 # =================================================================
@@ -356,6 +361,12 @@ if __name__ == "__main__":
     print("=====================================================")
     # Ensure the subject's directory exists
     os.makedirs(SUB_DIR, exist_ok=True)
-    # Create the master sequence file using constants from the top of the script
-    create_participant_sequences(SUB_DIR, SUB, N_NO_ARROW, N_LEFT, N_RIGHT)
-    print("\nSetup complete. You can now run the ASSR paradigm script.")
+    # should check if the file exists already
+    if os.path.exists(os.path.join(SUB_DIR, f"{SUB}_ASSR_master_trial_sequence.csv")):
+        print(f"WARNING: Master sequence file for {SUB} already exists! No action taken.")
+        # does the script close anyway or do i need to close it with a line here?
+        # exit()
+    else:
+        # Create the master sequence file using constants from the top of the script
+        create_participant_sequences(SUB_DIR, SUB, N_NO_ARROW, N_LEFT, N_RIGHT)
+        print(f"\nSetup complete. File created: {SUB}_ASSR_master_trial_sequence.csv. You can now run the ASSR_RUN paradigm script.")
