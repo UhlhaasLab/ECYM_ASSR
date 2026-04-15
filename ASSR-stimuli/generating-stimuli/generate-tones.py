@@ -11,7 +11,7 @@ from pathlib import Path
 
 # ----------------- STEP 0: PARAMETERS -----------------
 ############# should this fs be changed? to what
-fs = 44000  # sampling rate (Hz)
+fs = 44100  # sampling rate (Hz)
 #############
 
 

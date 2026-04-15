@@ -211,7 +211,7 @@ def preload_tones(vpdevice, paths):
     # check length
     loaded          = {}
     total_samples   = 0
-    common_fs       = None # assume same samling freq
+    common_fs       = None # assume same samling freq ---------------> dario ADAPT: is this ok? or 44100hz ????????????????????????????????? o
 
     for name, p in paths.items():
         x, fs, peak = _load_wav_float32(p)
@@ -311,6 +311,12 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
         attenuation_factor = 10 ** (DB_ABOVE_THRESHOLD / 20)
         SOUND_VOLUME = HEARING_THRESHOLD * attenuation_factor
         SOUND_VOLUME = min(SOUND_VOLUME, 1.0)
+
+        if SOUND_VOLUME > 1.0:
+            print(f"WARNING: volume {SOUND_VOLUME:.2f} too high, capping at 1.0")
+            SOUND_VOLUME = 1.0
+        else:
+            print(f"Sound volume set to {SOUND_VOLUME:.4f}")
 
         clicktrain_file = os.path.join(STIM_DIR, "clicktrain_40Hz_500ms.wav")
         Audio = sound.Sound(str(clicktrain_file), sampleRate=FS, volume=SOUND_VOLUME)

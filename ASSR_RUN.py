@@ -80,7 +80,6 @@ trials = load_trials()
 
 # ============================================================================================
 # -------------------- INSTRUCTIONS --------------------
-# instructions
 instr.draw()
 win.flip()
 device.updateRegisterCache()
@@ -105,14 +104,13 @@ while True:
 print(f"Starting CONDITION {CONDITION}...")
 
 # -------------------- INITIAL FIXATION --------------------
-# 1. Show initial fixation + trigger and hold it
+# initial fixation + trigger
 fix.draw()
 draw_pixel(win, trigger_to_RGB(TRIG_START)) # Draw trigger pixel LAST
 
 win.flip()  # display frame with trigger
-# here check erfans which comes first, the core wait or dev.update.reg.cache
+# which comes first, the core wait or dev.update.reg.cache
 device.updateRegisterCache()    # sync DATAPixx
-
 core.wait(pixel_time) # to let trigger pixeel settle
 
 # debug
@@ -122,9 +120,8 @@ print("")
 
 # then only the fixation
 fix.draw()
-win.flip()
 
-# 2. Hold this state for the specified duration
+win.flip()
 core.wait(1.0 - pixel_time)
 
 # debug
