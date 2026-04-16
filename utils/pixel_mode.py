@@ -33,42 +33,42 @@ def trigger_to_RGB(trigger: int):
 
 # ===================================== 2. DRAW PIXEL =====================================
 # line = exactly 1 pixel
-# def draw_pixel(win, pixelValue): 
-#     # draws pixel in topleft corner of window: window must cover top left of screen to work, interpolate must be set to FALSE before color is set, call this just before flip to ensure pixel is drawn over other stimuli
-#     topLeftCorner = [-win.size[0]/2, win.size[1]/2]
-#     line = visual.Line(
-#         win=win,
-#         units='pix',
-#         start=topLeftCorner,
-#         end=[topLeftCorner[0]+1, topLeftCorner[1]],
-#         interpolate=False,
-#         lineColor=pixelValue,
-#         colorSpace='rgb255',
-#         fillColor=None
-#     )
-#     line.draw()
-
-# rectange = for debugging: visible size PLUS for back to trigger calculation debug
 def draw_pixel(win, pixelValue): 
     # draws pixel in topleft corner of window: window must cover top left of screen to work, interpolate must be set to FALSE before color is set, call this just before flip to ensure pixel is drawn over other stimuli
-    pixel_square_size = 500 # 500. For debugging, set a visible size. For the experiment, this can be 1.
-    # The 'pos' of a Rect is its center. We calculate the center position. that places the square's top-left corner at the window's top-left corner.
-    x_pos = -win.size[0]/2 + pixel_square_size/2
-    y_pos =  win.size[1]/2 - pixel_square_size/2
-    # Use visual.Rect for a filled square.
-    pixel_square = visual.Rect(
+    topLeftCorner = [-win.size[0]/2, win.size[1]/2]
+    line = visual.Line(
         win=win,
         units='pix',
-        width=pixel_square_size,
-        height=pixel_square_size,
-        pos=[x_pos, y_pos],
+        start=topLeftCorner,
+        end=[topLeftCorner[0]+1, topLeftCorner[1]],
         interpolate=False,
-        lineColor=pixelValue, # Set both line and fill for a solid color
-        fillColor=pixelValue,
-        colorSpace='rgb255'
-        #colorSpace='rgb', # also changed in win
+        lineColor=pixelValue,
+        colorSpace='rgb255',
+        fillColor=None
     )
-    pixel_square.draw()
+    line.draw()
+
+# # rectange = for debugging: visible size PLUS for back to trigger calculation debug
+# def draw_pixel(win, pixelValue): 
+#     # draws pixel in topleft corner of window: window must cover top left of screen to work, interpolate must be set to FALSE before color is set, call this just before flip to ensure pixel is drawn over other stimuli
+#     pixel_square_size = 500 # 500. For debugging, set a visible size. For the experiment, this can be 1.
+#     # The 'pos' of a Rect is its center. We calculate the center position. that places the square's top-left corner at the window's top-left corner.
+#     x_pos = -win.size[0]/2 + pixel_square_size/2
+#     y_pos =  win.size[1]/2 - pixel_square_size/2
+#     # Use visual.Rect for a filled square.
+#     pixel_square = visual.Rect(
+#         win=win,
+#         units='pix',
+#         width=pixel_square_size,
+#         height=pixel_square_size,
+#         pos=[x_pos, y_pos],
+#         interpolate=False,
+#         lineColor=pixelValue, # Set both line and fill for a solid color
+#         fillColor=pixelValue,
+#         colorSpace='rgb255'
+#         #colorSpace='rgb', # also changed in win
+#     )
+#     pixel_square.draw()
   
 
   

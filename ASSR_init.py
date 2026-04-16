@@ -12,7 +12,7 @@ from pypixxlib.datapixx import DATAPixx3
 # change/run this script ONLY once for frist run,
 # for second run only change PAS to ATT and just SAVE
 # =================================================================
-SUB = "MSR01"
+SUB = "framerate_test"
 CONDITION = "ATT"   # "PAS", then "ATT" (ATT=attVIS=attend to visual stim)
 # =================================================================
 
