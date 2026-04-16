@@ -28,14 +28,16 @@ STIM_DIR = os.path.join(BASE_DIR, "ASSR-stimuli", "sounds")
 SUB_DIR  = os.path.join(BASE_DIR, "ASSR-data", SUB)
 os.makedirs(SUB_DIR, exist_ok=True) # make the folder if doesn't exist already
 
-# -------------------------- TRIGGERS -----------------------
-TRIG_START        = 900 # maybe leave out after testing phase
+# -------------------------- TRIGGERS (161-254) -----------------------
+# use trigger numbers below 255 so it stays onyl in the G channel
+# and use trigger numbers above 160 so it actually goes UP. To make the signal go UP (to a higher voltage or a higher integer value in analysis), you must use numbers strictly greater than 160.
+TRIG_START        = 162 # maybe leave out after testing phase
 
-TRIG_SOUND_no_arr = 100  # Sound presented with only fixation dot
-TRIG_L_ARR        = 300  # Sound presented simultaneously with a LEFT arrow
-TRIG_R_ARR        = 350  # Sound presented simultaneously with a RIGHT arrow
+TRIG_SOUND_no_arr = 200  # Sound presented with only fixation dot
+TRIG_L_ARR        = 220  # Sound presented simultaneously with a LEFT arrow
+TRIG_R_ARR        = 240  # Sound presented simultaneously with a RIGHT arrow
 
-TRIG_RESPONSE     = 500  # Participant response (red/right button press)
+TRIG_RESPONSE     = 250  # Participant response (red/right button press)
 
 # ------------------- TRIAL STRUCTURE ----------------------------
 SOA = 1.5           # sec
@@ -211,7 +213,7 @@ def preload_tones(vpdevice, paths):
     # check length
     loaded          = {}
     total_samples   = 0
-    common_fs       = None # assume same samling freq ---------------> dario ADAPT: is this ok? or 44100hz ????????????????????????????????? o
+    common_fs       = None # assume same samling freq ---------------> dario ADAPT: is this ok? or 44100hz ? change also for MMN???????????????????????????????? o
 
     for name, p in paths.items():
         x, fs, peak = _load_wav_float32(p)
@@ -351,8 +353,8 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
 
 # preload text
 def preload_txt(win):   
-   txt_intro_PAS = visual.TextStim(win, text="Schauen Sie während des Experiments auf die Mitte des Bildschirms. \n\n Drücken Sie den roten/rechten Knopf, um zu starten.", height=1, pos=(0, 0), units='deg', color='black')
-   txt_intro_ATT = visual.TextStim(win, text="Drücken Sie rechten/roten Knopf, wenn Sie einen Pfeil sehen, der nach rechts zeigt: ▶ \n\n Drücken Sie den roten/rechten Knopf, um zu starten.", height=1, pos=(0, 0), units='deg', color='black')
+   txt_intro_PAS = visual.TextStim(win, text="Schauen Sie während des Experiments auf die Mitte des Bildschirms. \n\n Drücken Sie den roten/rechten Knopf um zu starten.", height=1, pos=(0, 0), units='deg', color='black')
+   txt_intro_ATT = visual.TextStim(win, text="Drücken Sie rechten/roten Knopf, wenn Sie einen Pfeil sehen, der nach rechts zeigt: ▶ \n\n Drücken Sie den roten/rechten Knopf um zu starten.", height=1, pos=(0, 0), units='deg', color='black')
    txt_finished = visual.TextStim(win, text="Dieser Durchgang ist beendet.\n Vielen Dank. \n\n Bitte warten Sie auf Anweisungen.", height=1, pos=(0, 0), units='deg', color='black')
    
    return {"txt_intro_PAS": txt_intro_PAS, "txt_intro_ATT": txt_intro_ATT, "txt_finished": txt_finished}

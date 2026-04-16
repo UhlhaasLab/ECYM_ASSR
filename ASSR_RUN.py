@@ -38,7 +38,8 @@ win = visual.Window(
     monitor=monitor_settings['monitor_name'], size=monitor_settings['monitor_size_pix'], 
     fullscr=True, 
     units="deg", 
-    color=[212, 212, 212],
+    #color=[212, 212, 212],
+    color= [160, 160, 160], # slightly darker gray to increase contrast with trigger pixel
     colorSpace='rgb255', 
     #colorSpace='rgb',
     #colorSpace='rgb1',
@@ -159,17 +160,17 @@ for trial_data in trials:
         trigger_to_send = TRIG_R_ARR
     
 
-    # ========== 1. FIRST FRAME: stim + trigger + audio (VSync locked)
+    # ========== SOUND + VISUAL + TRIGGER PRESENTATION
     stim_to_draw.draw() # Draw the visual stimulus (either fixation or arrow)
      
     if MRS == 0:
         # AUDIO PSYCHOPY
         win.callOnFlip(audio_reg.play)  # audio exactly on flip -> THIS WORKS IN PSYCHOPY
-    
+        
     if MRS == 1:
         # AUDIO VPIXX  -----------> ADAPT? make wihtout "if"?
         # prepare audio, not execute yet
-        infoaud_fb = audio_reg
+        infoaud_fb = audio_reg # here we only have 1 clicktrain. thus audio_reg = clicktrain
         device.audio.stopSchedule()
         device.audio.setAudioSchedule(0.0, infoaud_fb['fs'], infoaud_fb['n'], 'mono')
         device.audio.setReadAddress(infoaud_fb['addr'])
@@ -200,9 +201,8 @@ for trial_data in trials:
     print_trigger_info(device)
     print("")
     
-    # ========== 2. STIMULUS ONLY / turn trigger "off"
-    # Clear the trigger pixel on the very next frame
-    stim_to_draw.draw()
+    # ========== clear trigger. present visual for remaining time (sound continues and trigger turned off)
+    stim_to_draw.draw() # only visual, no trigger
     win.flip() # This flip is less critical, so no cache update needed unless i need its timestamp.
 
     # wait remaining arrow duration (if there is an arrow)
@@ -211,8 +211,9 @@ for trial_data in trials:
         fix.draw() # After the duration, replace arrow with fixation dot
         win.flip()
 
-    # ========== 3. FIXATION + RESPONSE WINDOW
+    # ========== RESPONSE WINDOW + FIXATION
     fix.draw()
+    flush_buttons(device, myLog)
     win.flip()
 
     # debug
@@ -221,7 +222,6 @@ for trial_data in trials:
     print("")
 
     response_collected = False # Use a simple flag to ensure we only log one press
-    flush_buttons(device, myLog)
 
     # Now, wait for the rest of the SOA while collecting responses
     while psychopy_clock.getTime() < trial_onset_psy + SOA:        
@@ -259,14 +259,13 @@ for trial_data in trials:
                             fix.draw()
                             draw_pixel(win, trigger_to_RGB(TRIG_RESPONSE))
                             
-                            device.updateRegCacheAfterVideoSync()
-                            win.flip()
-                            #print_trigger_info(device, TRIG_RESPONSE) 
+                            # device.updateRegCacheAfterVideoSync()
+                            win.flip() 
                             core.wait(pixel_time) # to let trigger pixeel settle (ADAPT IN MRS)
                             
                             # clear response trigger
                             fix.draw()
-                            win.callOnFlip(device.updateRegCacheAfterVideoSync)
+                            # win.callOnFlip(device.updateRegCacheAfterVideoSync)
                             win.flip()
 
                         elif arrow_type == "left":
