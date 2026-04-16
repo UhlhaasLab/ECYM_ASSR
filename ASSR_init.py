@@ -9,10 +9,11 @@ from pypixxlib.datapixx import DATAPixx3
 # =================================================================
 # TO BE CHANGED BY EXPERIMENTER
 # 
-# run only ONCE
+# change/run this script ONLY once for frist run,
+# for second run only change PAS to ATT and just SAVE
 # =================================================================
-SUB = "JOH4"
-CONDITION = "ATT"   # "PAS" or "ATT" (ATT=attVIS=attend to visual stim)
+SUB = "MSR01"
+CONDITION = "ATT"   # "PAS", then "ATT" (ATT=attVIS=attend to visual stim)
 # =================================================================
 
 
@@ -41,7 +42,7 @@ TRIG_RESPONSE     = 250  # Participant response (red/right button press)
 
 # ------------------- TRIAL STRUCTURE ----------------------------
 SOA = 1.5           # sec
-ARROW_DUR = 0.2     # or 150ms?
+ARROW_DUR = 0.150     # or 200ms?
 
 N_NO_ARROW = 145    # number of no arrow trials 
 N_LEFT = 29         # number of left arrows
@@ -300,10 +301,10 @@ def assign_subject_gains(in_audio_reg, threshold_linear, per_tone_dBSL, master=1
     return in_audio_reg
 
 # --------------------------PRELOAD STIMULI AND TEXT ---------------
-fixation_angle = 1 # 0.5 # 0.5 looks good, maybe a bit too small? ----> ADAPT
-
 # dB_SL=60 or 65 or 50
 def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
+    fixation_angle = 1 # 0.5 # 0.5 looks good, maybe a bit too small? ----> ADAPT
+
     if MRS == 0:
         # ======= AUDITORY
         FS = 48000 

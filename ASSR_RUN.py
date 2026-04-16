@@ -112,6 +112,7 @@ draw_pixel(win, trigger_to_RGB(TRIG_START)) # Draw trigger pixel LAST
 win.flip()  # display frame with trigger
 # which comes first, the core wait or dev.update.reg.cache
 device.updateRegisterCache()    # sync DATAPixx
+
 core.wait(pixel_time) # to let trigger pixeel settle
 
 # debug
@@ -121,7 +122,6 @@ print("")
 
 # then only the fixation
 fix.draw()
-
 win.flip()
 core.wait(1.0 - pixel_time)
 
@@ -187,8 +187,8 @@ for trial_data in trials:
     win.flip()  # FLIP = visual + trigger + audio start aligned
 
     # store sound onset times
-    sound_onset_dev = flip_marks["t_onset_dev"]
-    sound_onset_psy = flip_marks["t_onset_psy"]
+    sound_onset_dev = flip_marks.get("t_onset_dev")
+    sound_onset_psy = flip_marks.get("t_onset_psy")
     # arrow onset: if shown, its onset is the same as the sound's
     if arrow_type != "none":
         arrow_onset_psy = sound_onset_psy
@@ -201,9 +201,9 @@ for trial_data in trials:
     print_trigger_info(device)
     print("")
     
-    # ========== clear trigger. present visual for remaining time (sound continues and trigger turned off)
+    # ========== clear trigger. present visual for remaining time (sound continues and trigger turned off).
     stim_to_draw.draw() # only visual, no trigger
-    win.flip() # This flip is less critical, so no cache update needed unless i need its timestamp.
+    win.flip() 
 
     # wait remaining arrow duration (if there is an arrow)
     if arrow_type != "none":
