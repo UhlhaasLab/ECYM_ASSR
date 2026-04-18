@@ -32,7 +32,9 @@ os.makedirs(SUB_DIR, exist_ok=True) # make the folder if doesn't exist already
 # -------------------------- TRIGGERS (161-254) -----------------------
 # use trigger numbers below 255 so it stays onyl in the G channel
 # and use trigger numbers above 160 so it actually goes UP. To make the signal go UP (to a higher voltage or a higher integer value in analysis), you must use numbers strictly greater than 160.
-TRIG_START        = 162 # maybe leave out after testing phase
+
+TRIG_START = 162   
+TRIG_END   = 172 
 
 TRIG_SOUND_no_arr = 200  # Sound presented with only fixation dot
 TRIG_L_ARR        = 220  # Sound presented simultaneously with a LEFT arrow

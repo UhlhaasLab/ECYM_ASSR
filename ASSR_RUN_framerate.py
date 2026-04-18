@@ -1,13 +1,15 @@
 """
-to do
-- check if trial seq is correct
-
-- interpolate=False . In your draw_pixel function, you have a comment: interpolate must be set to FALSE. This is crucial. If the GPU "blurs" (interpolates) your trigger pixel with the neighboring gray pixels, the color value will change, and the DataPixx will read the wrong trigger number. Ensure your visual.Rect or visual.Window has anti-aliasing/interpolation disabled for that specific area.
-
-- move stuff to init
+TIN/LAKSH: - 44kHz ??
 
 TINEKE:
 - for now it sends triggers when correct response. can take out right?
+- should i reset the psychopy clock at beginning?
+
+DARIO:
+- updateReg cache use after trigger pres???
+
+end:
+- check if trial seq is correct
 """
 
 import random, csv, time, os
@@ -15,7 +17,7 @@ from psychopy import visual, core, event, sound
 
 from ASSR_init import (SUB, CONDITION, MRS, SUB_DIR, STIM_DIR, SOA, ARROW_DUR,
                         # triggers
-                        TRIG_START,
+                        TRIG_START, TRIG_END,
                         TRIG_SOUND_no_arr, TRIG_L_ARR, TRIG_R_ARR, 
                         TRIG_RESPONSE, 
                         # vpixx
@@ -48,10 +50,11 @@ win = visual.Window(
 win.mouseVisible = False
 mouse = event.Mouse(visible=False) 
 
-# for frame rate timing (frameDur = 1.0 / win.getActualFrameRate())
-monitor_rr = monitor_settings["refresh_rate"]
-frameDur = 1.0 / monitor_rr # if monitor_rr else win.monitorFramePeriod    # use actual refresh rate if available, otherwise fallback to PsychoPy's estimate
-TRIG_FRAMES = 2 # pixel should show for 2 frames
+# number of frames = duration in sec * refresh rate in Hz (frames per second)
+monitor_rr = monitor_settings["refresh_rate"] # 120 in MSR.     60 on laptop
+frameDur = 1.0 / monitor_rr     # 0.008333s, 8.33ms in MSR.     0.016666s, 16.67ms on laptop.       1 frame last 8.33ms, then next..
+TRIG_FRAMES = 2 # pixel should show for 2 frames, = 16.66ms in MSR, 33.32ms on laptop
+soa_frames = round(SOA / frameDur) # in MSR: round(1.5s / 0.008333) = 180 frames for one SOA.
 
 # -------------------- LOGGING SETUP --------------------
 log_file = os.path.join(SUB_DIR, f"{SUB}_{CONDITION}_log_{timestamp}.csv")
@@ -86,20 +89,20 @@ trials = load_trials()
 
 # ============================================================================================
 # -------------------- INSTRUCTIONS --------------------
-instr.draw()
-win.flip()
-device.updateRegisterCache()
+# instr.draw()
+# win.flip()
+# device.updateRegisterCache()
 
-flush_buttons(device, myLog)
+# flush_buttons(device, myLog)
 
-while True:
-    button, _ = collect_response(device, myLog, buttonCodes) # read VPixx buttonbox
+# while True:
+#     button, _ = collect_response(device, myLog, buttonCodes) # read VPixx buttonbox
     
-    if button in ["red"]:
-    #if event.getKeys(keyList=['r']): # for keyboard testing
-        break
-    if check_abort(): 
-        core.quit()
+#     if button in ["red"]:
+#     #if event.getKeys(keyList=['r']): # for keyboard testing
+#         break
+#     if check_abort(): 
+#         core.quit()
 
 # -------------------- COUNTDOWN --------------------
 # for number in ["3", "2", "1"]:
@@ -107,35 +110,35 @@ while True:
 #     countdown_text.draw()
 #     win.flip()
 #     core.wait(1.0) # Show each number for 1 second
-print(f"Starting CONDITION {CONDITION}...")
+print(f"Starting ASSR CONDITION {CONDITION}...")
 
 # -------------------- INITIAL FIXATION --------------------
-# initial fixation + trigger
-fix.draw()
-draw_pixel(win, trigger_to_RGB(TRIG_START)) # Draw trigger pixel LAST
-
-win.flip()  # display frame with trigger
-# which comes first, the core wait or dev.update.reg.cache
-device.updateRegisterCache()    # sync DATAPixx
-
-core.wait(pixel_time) # to let trigger pixeel settle
+for f in range(TRIG_FRAMES):
+    fix.draw()
+    draw_pixel(win, trigger_to_RGB(TRIG_START))
+    win.flip()
 
 # debug
-print(f"TRIG START ON {TRIG_START} = {trigger_to_RGB(TRIG_START)}")
+print(f"TRIG START ON {TRIG_START}, RGB: {trigger_to_RGB(TRIG_START)}")
 print_trigger_info(device)
 print("")
 
-# then only the fixation
-fix.draw()
-win.flip()
-core.wait(1.0 - pixel_time)
+for f in range(round(1.0 / frameDur) - TRIG_FRAMES):
+    fix.draw()
+    win.flip()
 
 # debug
-print(f"TRIG START OFF")
+print(f"gray")
 print_trigger_info(device)
 print("")
 
 # -------------------- MAIN LOOP --------------------
+"""
+# ADAPT -------------> should i reset the psychopy clock? 
+win.callOnFlip(psychopy_clock.reset) # set clock=0
+win.flip()
+"""
+
 for trial_data in trials:
     check_abort()
     flip_marks = {}
@@ -165,10 +168,13 @@ for trial_data in trials:
         trigger_to_send = TRIG_R_ARR
     
     # --------- FRAME COUNTS ----------
-    soa_frames = round(SOA / frameDur)
     arrow_frames = round(ARROW_DUR / frameDur) if arrow_type != "none" else 0
 
-    # ========== SOUND + VISUAL + TRIGGER PRESENTATION
+
+    # ============= SOUND + VISUAL + TRIGGER PRESENTATION
+    """ each trial starts with frame number 0, and we present the sound and visual stimulus for a total of SOA (e.g., 1.5s), which corresponds to a certain number of frames (e.g., 180 frames at 120Hz). The trigger is presented only for the first few frames (e.g., 2 frames = 16.66ms in MSR) to ensure it is registered by the DataPixx, while the visual stimulus can be presented for the entire SOA duration. the arrows are presented for a certain duration (e.g., 500ms), which corresponds to a certain number of frames (e.g., 60 frames at 120Hz). So the sequence within each trial is:
+            - Frame 0: Present sound, visual stimulus (fixation or arrow), and trigger (for 2 frames)
+            - Frames 1 to 59: Continue presenting sound and visual stimulus, but no trigger (to ensure trigger is only for the first 2 frames) """
     frameN = 0
     response_collected = False
 
@@ -181,8 +187,20 @@ for trial_data in trials:
             stim_to_draw.draw()
 
         # ---- TRIGGER (first 2 frames only) ----
-        if frameN < TRIG_FRAMES:
+        if frameN < TRIG_FRAMES: # use < for presenting the trig for frame 0 and 1 (two frames), and use <= for presenting the trig for frame 0, 1, and 2 (three frames)
             draw_pixel(win, trigger_to_RGB(trigger_to_send))
+        
+            # debug only once per trial, after pixel settling, to check trigger values:
+            if frameN == TRIG_FRAMES - 1:
+                print(f"trig_to_send: {trigger_to_send}, RGB: {trigger_to_RGB(trigger_to_send)}")
+                print_trigger_info(device)
+                print("")
+
+        # debug gray 
+        if frameN == TRIG_FRAMES + 1:
+            print(f"gray")
+            print_trigger_info(device)
+            print("")
 
         # ---- ONSET TIMING ----
         if frameN == 0:
@@ -220,21 +238,20 @@ for trial_data in trials:
             response = collect_response(device, myLog, buttonCodes)
 
             if response is not None:
-                button_pressed, t_dev = response
+                button_pressed, t_dev_pressed = response
 
                 if button_pressed == "red":
                     response_collected = True
 
                     # consistent RTs (same event base)
-                    rt_dev = t_dev - sound_onset_dev
-                    #rt_psy = t_dev - sound_onset_psy
+                    rt_dev = t_dev_pressed - sound_onset_dev
                     rt_psy = psychopy_clock.getTime() - sound_onset_psy
 
                     if arrow_type == "right":
                         response_key = "red"
 
                         # response trigger (2 frames)
-                        for _ in range(TRIG_FRAMES):
+                        for f in range(TRIG_FRAMES):
                             fix.draw()
                             draw_pixel(win, trigger_to_RGB(TRIG_RESPONSE))
                             win.flip()
@@ -259,6 +276,19 @@ for trial_data in trials:
 
 # -------------------- FINISH --------------------
 log_f.close()
+
+# wait one soa
+for f in range(soa_frames):
+    win.flip()
+
+# RUN END trigger (2 frames)
+for f in range(TRIG_FRAMES):
+    draw_pixel(win, trigger_to_RGB(TRIG_END))
+    win.flip()
+win.flip() # clear trig
+print(f"Condition {CONDITION} finished.")
+
+
 txt_finished.draw()
 win.flip()
 core.wait(3)

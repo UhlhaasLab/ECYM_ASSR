@@ -32,7 +32,7 @@ def trigger_to_RGB(trigger: int):
 
 
 # ===================================== 2. DRAW PIXEL =====================================
-# line = exactly 1 pixel
+# # line = exactly 1 pixel
 def draw_pixel(win, pixelValue): 
     # draws pixel in topleft corner of window: window must cover top left of screen to work, interpolate must be set to FALSE before color is set, call this just before flip to ensure pixel is drawn over other stimuli
     topLeftCorner = [-win.size[0]/2, win.size[1]/2]
@@ -90,40 +90,5 @@ def GB_to_trigger(color):
 def print_trigger_info(device):
     line = device.getVideoLine()
     linevalue = GB_to_trigger([line[0][0], line[1][0], line[2][0]])
-    print(f"Video line value: {linevalue}")  # Debugging output to check the video line value
-    # linevalues are eg 55769, etc.. how do i convert it back to trigger number? i need to do the inverse of trigger_to_RGB, which is GB_to_trigger. i can then compare the reconstructed trigger number to the expected trigger number for debugging. this will help me confirm that the correct trigger is being sent and read by the device.:
-    # for this i therefore need to print:
-    print(f"Reconstructed trigger number from video line: {GB_to_trigger([line[0][0], line[1][0], line[2][0]])}")  # This should match the expected trigger number if everything is correct.
+    print(f"Video line value: {linevalue}")  # Debugging output to check the video line value    
 
-
-# # if above doesnt work try this:
-# def print_trigger_info(device):
-#     line = device.getVideoLine()
-
-#     # top-left pixel (your trigger pixel)
-#     R = int(line[0][0])
-#     G = int(line[1][0])
-#     B = int(line[2][0])
-
-#     trig = (B << 8) + G
-#     print(f"Trigger:{trig}.  Videoline: R={R}, G={G}, B={B}.")  # Debugging output to check the video line value and reconstructed trigger number
-
-
-
-# # worked as well i think?
-# def print_trigger_info(device, expected_trigger):
-#     """
-#     Prints the video line RGB values and the reconstructed trigger number.
-#     Useful for debugging pixel mode trigger encoding.
-#     """
-#     line = device.getVideoLine()
-#     rgb_values = [line[0][0], line[1][0], line[2][0]]
-#     read_trigger = GB2trigger(rgb_values)
-
-#     match = (read_trigger == expected_trigger)
-    
-#     print("=== Trigger Debug Info ===")
-#     print(f"Video line RGB: {rgb_values}")  # Raw RGB values from video line
-#     print(f"Expected RGB for trigger {expected_trigger}: {trigger_to_RGB(expected_trigger)}")  # What RGB should be for the expected trigger
-#     print(f"Reconstructed trigger number: {read_trigger}")  # Trigger decoded from RGB
-#     print(f"Match: {match}")  
