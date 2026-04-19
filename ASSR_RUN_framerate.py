@@ -1,6 +1,4 @@
 """
-TIN/LAKSH: - 44kHz ??
-
 TINEKE:
 - for now it sends triggers when correct response. can take out right?
 - should i reset the psychopy clock at beginning?
@@ -94,10 +92,8 @@ trials = load_trials()
 # device.updateRegisterCache()
 
 # flush_buttons(device, myLog)
-
 # while True:
 #     button, _ = collect_response(device, myLog, buttonCodes) # read VPixx buttonbox
-    
 #     if button in ["red"]:
 #     #if event.getKeys(keyList=['r']): # for keyboard testing
 #         break
