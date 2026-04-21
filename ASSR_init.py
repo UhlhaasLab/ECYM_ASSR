@@ -10,10 +10,10 @@ from pypixxlib.datapixx import DATAPixx3
 # TO BE CHANGED BY EXPERIMENTER
 # 
 # change/run this script ONLY once for frist run,
-# for second run only change PAS to ATT and just SAVE
+# for second run only change PAS to ATT and just SAVE (as it uses the same sequence file)
 # =================================================================
-SUB = "framerate_test"
-CONDITION = "ATT"   # "PAS", then "ATT" (ATT=attVIS=attend to visual stim)
+SUB = "TVE25_01"
+CONDITION = "PAS"   # "PAS", then "ATT" (ATT=attVIS=attend to visual stim)
 # =================================================================
 
 
@@ -21,7 +21,7 @@ CONDITION = "ATT"   # "PAS", then "ATT" (ATT=attVIS=attend to visual stim)
 
 
 
-MRS = 0     # 0=no, 1=yes
+MRS = 1     # 0=no, 1=yes
 
 # -------------------------- PATHS -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))   # script location
@@ -164,7 +164,7 @@ def stim_monitor():
         # "OPM": {"width_cm": 78, "dist_cm": 122, "res_pix": [1920, 1080], "name": "OPM_Monitor", "refresh_rate": 120, "screen_idx": 2}
 
         # Monitor/Experiment settings 
-        viewing_distance_cm 	= 122
+        viewing_distance_cm 	= 122 # ADAPT -----------------?????????????
         monitor_width_cm    	= 78
         monitor_size_pix    	= [1920, 1080] 
         monitor_name        	= "OPM_Monitor"
@@ -216,11 +216,12 @@ def preload_tones(vpdevice, paths):
     # check length
     loaded          = {}
     total_samples   = 0
-    common_fs       = None # assume same samling freq ---------------> dario ADAPT: is this ok? or 44100hz ? change also for MMN???????????????????????????????? o
+    common_fs       = None
 
     for name, p in paths.items():
         x, fs, peak = _load_wav_float32(p)
-        x = np.asarray(x, dtype=np.float32).squeeze()
+        x = np.asarray(x, dtype=np.float32).squeeze() # Ensure it's 1D
+        # x = np.asarray(x, dtype=np.float32).ravel() # chatgpt recommended this. dario?
         
         if x.ndim != 1:
             raise ValueError(f"Tone '{name}' is not mono (shape {x.shape})")
@@ -242,8 +243,6 @@ def preload_tones(vpdevice, paths):
     print(f"[AUDIO] base address (bytes): {base_addr}")
     print(f"[AUDIO] buffer size (bytes): {buf_bytes}")
     print(f"[AUDIO] total samples to write: {total_samples} -> {total_samples * 2} bytes")
-    
-    bytes_needed = total_samples * 2 # why this line?
 
     # build one big bank
     all_arrays = [loaded[name][0] for name in paths.keys()]
@@ -251,14 +250,14 @@ def preload_tones(vpdevice, paths):
 
     # writes at 16e6 internally; passing base_addr keeps intent consistent
     vpdevice.audio.writeAudioBuffer(audio_bank, bufferAddress=base_addr)
-    vpdevice.updateRegisterCache()
+    vpdevice.updateRegisterCache() # dario is this needed this update here? victoria said she doesnt need it
 
     # offsets + registry
     offset_samples = 0
     for name in paths.keys():
         x, fs, peak, n_samples = loaded[name]
         
-        addr_bytes = base_addr + offset_samples * 2
+        addr_bytes = base_addr + offset_samples * 2    # ADAPT  ?? * 4? i dont need the offset soo much (especially not for ASSR). but for MMN i have 2 tones, so i need to make sure they are stored at different addresses. if each sample is 4 bytes (float32), then the offset in bytes should be offset_samples * 4. but if vpixx expects the offset in samples, then it should just be offset_samples * 2 because vpixx might internally multiply by 2 to get byte address. i need to check this. for now i will assume that the offset in the registry is in samples, not bytes, so i will just put offset_samples here without multiplying by 2 or 4. but i will keep the base_addr in bytes when writing to the buffer, because that is what vpixx expects.
         
         reg[name] = {
             "addr": addr_bytes,
@@ -343,7 +342,7 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
         # load threshold & add gains
         thr_info  = load_threshold_csv(os.path.join(subjectpath, "round_2_hearing_threshold_1000.csv"))
         thr_lin   = thr_info["threshold_amplitude"]
-        audio_reg = assign_subject_gains(audio_reg, threshold_linear=thr_lin, per_tone_dBSL={'Aud_X': dB_SL, 'Aud_Y': dB_SL, 'Aud_FB': dB_SL-10})
+        audio_reg = assign_subject_gains(audio_reg, threshold_linear=thr_lin, per_tone_dBSL={'clicktrain': dB_SL})  # ADAPTED FROM this/darios: ={'Aud_X': dB_SL, 'Aud_Y': dB_SL, 'Aud_FB': dB_SL-10})
         print(audio_reg)        
 
         # ======= VISUAL

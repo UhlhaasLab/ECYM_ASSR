@@ -12,12 +12,7 @@ from pathlib import Path
 
 #############
 fs = 48000  # sampling rate (Hz)
-# dario: I think the device accept values from 8k to 96k. For the purpose of the assr, i think you could use 44.1 or 48k that should not matter as both are more than sufficient. I think what is critical is that you select correctly the sampling rate based on how you created your file
 #############
-
-
-
-
 
 # outdir should be in the same folder as this script
 out_dir = Path(__file__).resolve().parent

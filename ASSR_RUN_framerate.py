@@ -1,4 +1,4 @@
-"""
+""" written by Johanna Prugger.
 TINEKE:
 - for now it sends triggers when correct response. can take out right?
 - should i reset the psychopy clock at beginning?
@@ -8,6 +8,13 @@ DARIO:
 
 end:
 - check if trial seq is correct
+
+
+HPI settings check if correct before start Recording.
+    LOCALIZE after every run.
+LabMaestro settings OMCB: eyetracker only.
+
+
 """
 
 import random, csv, time, os
@@ -46,11 +53,11 @@ win = visual.Window(
     screen=monitor_settings["screen_number"]
 )
 win.mouseVisible = False
-mouse = event.Mouse(visible=False) 
+mouse = event.Mouse(visible=False)
 
 # number of frames = duration in sec * refresh rate in Hz (frames per second)
 monitor_rr = monitor_settings["refresh_rate"] # 120 in MSR.     60 on laptop
-frameDur = 1.0 / monitor_rr     # 0.008333s, 8.33ms in MSR.     0.016666s, 16.67ms on laptop.       1 frame last 8.33ms, then next..
+frameDur = 1.0 / monitor_rr # 0.008333s, 8.33ms in MSR.     0.016666s, 16.67ms on laptop.       1 frame last 8.33ms, then next..
 TRIG_FRAMES = 2 # pixel should show for 2 frames, = 16.66ms in MSR, 33.32ms on laptop
 soa_frames = round(SOA / frameDur) # in MSR: round(1.5s / 0.008333) = 180 frames for one SOA.
 
@@ -87,25 +94,25 @@ trials = load_trials()
 
 # ============================================================================================
 # -------------------- INSTRUCTIONS --------------------
-# instr.draw()
-# win.flip()
-# device.updateRegisterCache()
+instr.draw()
+win.flip()
+device.updateRegisterCache()
 
-# flush_buttons(device, myLog)
-# while True:
-#     button, _ = collect_response(device, myLog, buttonCodes) # read VPixx buttonbox
-#     if button in ["red"]:
-#     #if event.getKeys(keyList=['r']): # for keyboard testing
-#         break
-#     if check_abort(): 
-#         core.quit()
+flush_buttons(device, myLog)
+while True:
+    button, _ = collect_response(device, myLog, buttonCodes) # read VPixx buttonbox
+    if button in ["red"]:
+    #if event.getKeys(keyList=['r']): # for keyboard testing, psychopy
+        break
+    if check_abort(): 
+        core.quit()
 
 # -------------------- COUNTDOWN --------------------
-# for number in ["3", "2", "1"]:
-#     countdown_text = visual.TextStim(win, text=number, height=3, color='black')
-#     countdown_text.draw()
-#     win.flip()
-#     core.wait(1.0) # Show each number for 1 second
+for number in ["3", "2", "1"]:
+    countdown_text = visual.TextStim(win, text=number, height=3, color='black')
+    countdown_text.draw()
+    win.flip()
+    core.wait(1.0) # Show each number for 1 second
 print(f"Starting ASSR CONDITION {CONDITION}...")
 
 # -------------------- INITIAL FIXATION --------------------
@@ -114,19 +121,19 @@ for f in range(TRIG_FRAMES):
     draw_pixel(win, trigger_to_RGB(TRIG_START))
     win.flip()
 
-# debug
-print(f"TRIG START ON {TRIG_START}, RGB: {trigger_to_RGB(TRIG_START)}")
-print_trigger_info(device)
-print("")
+# # debug
+# print(f"TRIG START ON {TRIG_START}, RGB: {trigger_to_RGB(TRIG_START)}")
+# print_trigger_info(device)
+# print("")
 
 for f in range(round(1.0 / frameDur) - TRIG_FRAMES):
     fix.draw()
     win.flip()
 
-# debug
-print(f"gray")
-print_trigger_info(device)
-print("")
+# # debug
+# print(f"gray")
+# print_trigger_info(device)
+# print("")
 
 # -------------------- MAIN LOOP --------------------
 """
@@ -186,17 +193,17 @@ for trial_data in trials:
         if frameN < TRIG_FRAMES: # use < for presenting the trig for frame 0 and 1 (two frames), and use <= for presenting the trig for frame 0, 1, and 2 (three frames)
             draw_pixel(win, trigger_to_RGB(trigger_to_send))
         
-            # debug only once per trial, after pixel settling, to check trigger values:
-            if frameN == TRIG_FRAMES - 1:
-                print(f"trig_to_send: {trigger_to_send}, RGB: {trigger_to_RGB(trigger_to_send)}")
-                print_trigger_info(device)
-                print("")
+            # # debug only once per trial, after pixel settling, to check trigger values:
+            # if frameN == TRIG_FRAMES - 1:
+            #     print(f"trig_to_send: {trigger_to_send}, RGB: {trigger_to_RGB(trigger_to_send)}")
+            #     print_trigger_info(device)
+            #     print("")
 
-        # debug gray 
-        if frameN == TRIG_FRAMES + 1:
-            print(f"gray")
-            print_trigger_info(device)
-            print("")
+        # # debug gray 
+        # if frameN == TRIG_FRAMES + 1:
+        #     print(f"gray")
+        #     print_trigger_info(device)
+        #     print("")
 
         # ---- ONSET TIMING ----
         if frameN == 0:
@@ -205,17 +212,15 @@ for trial_data in trials:
             else:
                 infoaud_fb = audio_reg
                 device.audio.stopSchedule()
-                device.audio.setAudioSchedule(0.0, infoaud_fb['fs'], infoaud_fb['n'], 'mono')
+                device.audio.setAudioSchedule(0.0, infoaud_fb['fs'], infoaud_fb['n'], 'mono') # should i add FS=48000 here? or is it already in the audio reg?
                 device.audio.setReadAddress(infoaud_fb['addr'])
                 device.audio.startSchedule()
+                device.updateRegCacheAfterVideoSync()
 
             win.callOnFlip(lambda: flip_marks.update({
                 "t_onset_dev": device.getTime(),
-                "t_onset_psy": psychopy_clock.getTime()
-            }))
-
-            device.updateRegCacheAfterVideoSync()
-
+                "t_onset_psy": psychopy_clock.getTime()}))
+        
         win.flip()
 
         # ---- STORE ONSETS ----
