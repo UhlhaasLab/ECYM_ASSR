@@ -73,7 +73,7 @@ txt_dict = preload_txt(win)
 instr = txt_dict["txt_intro_PAS"] if CONDITION == "PAS" else txt_dict["txt_intro_ATT"]
 txt_finished = txt_dict["txt_finished"]
 
-stim = preload_stimuli(win, STIM_DIR, SUB_DIR, device, dB_SL=35)
+stim = preload_stimuli(win, STIM_DIR, SUB_DIR, device, dB_SL=60)
 # audio
 audio_reg = stim["Audio"]
 # visual
@@ -141,7 +141,6 @@ for f in range(round(1.0 / frameDur) - TRIG_FRAMES):
 win.callOnFlip(psychopy_clock.reset) # set clock=0
 win.flip()
 """
-infoaud_fb = audio_reg['clicktrain']
 
 for trial_data in trials:
     check_abort()
@@ -208,17 +207,19 @@ for trial_data in trials:
 
         # ---- ONSET TIMING ----
         if frameN == 0:
-            
-            device.audio.stopSchedule()
-            device.audio.setAudioSchedule(0.0, infoaud_fb['fs'], infoaud_fb['n'], 'mono')
-            device.audio.setVolume(infoaud_fb['gain']) # i had to add this here else i wouldn't hear it
-            device.audio.setReadAddress(infoaud_fb['addr'])
-            device.audio.startSchedule()
-            device.updateRegCacheAfterVideoSync() # attention does this need to be commented out?
+            if MRS == 0:
+                win.callOnFlip(audio_reg.play)
+            else:
+                infoaud_fb = audio_reg
+                device.audio.stopSchedule()
+                device.audio.setAudioSchedule(0.0, infoaud_fb['fs'], infoaud_fb['n'], 'mono') # should i add FS=48000 here? or is it already in the audio reg?
+                device.audio.setReadAddress(infoaud_fb['addr'])
+                device.audio.startSchedule()
+                device.updateRegCacheAfterVideoSync()
 
             win.callOnFlip(lambda: flip_marks.update({
-                    "t_onset_dev": device.getTime(),
-                    "t_onset_psy": psychopy_clock.getTime()}))
+                "t_onset_dev": device.getTime(),
+                "t_onset_psy": psychopy_clock.getTime()}))
         
         win.flip()
 
@@ -239,14 +240,13 @@ for trial_data in trials:
 
             if response is not None:
                 button_pressed, t_dev_pressed = response
-                t_psy_pressed = psychopy_clock.getTime()
 
                 if button_pressed == "red":
                     response_collected = True
 
                     # consistent RTs (same event base)
                     rt_dev = t_dev_pressed - sound_onset_dev
-                    rt_psy = t_psy_pressed - sound_onset_psy
+                    rt_psy = psychopy_clock.getTime() - sound_onset_psy
 
                     if arrow_type == "right":
                         response_key = "red"

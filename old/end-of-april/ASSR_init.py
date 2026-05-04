@@ -13,7 +13,7 @@ from pypixxlib.datapixx import DATAPixx3
 # for second run only change PAS to ATT and just SAVE (as it uses the same sequence file)
 # =================================================================
 SUB = "TVE25_01"
-CONDITION = "ATT"   # "PAS", then "ATT" (ATT=attVIS=attend to visual stim)
+CONDITION = "PAS"   # "PAS", then "ATT" (ATT=attVIS=attend to visual stim)
 # =================================================================
 
 
@@ -282,7 +282,7 @@ def preload_tones(vpdevice, paths):
 def load_threshold_csv(subjectpath):
     # Load Subject-Specific Hearing Threshold
     with open(subjectpath, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f, delimiter=';')
+        reader = csv.DictReader(f)
         row = next(reader)
     return {
         "subject_id": row["subject_id"],
@@ -298,29 +298,12 @@ def assign_subject_gains(in_audio_reg, threshold_linear, per_tone_dBSL, master=1
         this_dBSL       = per_tone_dBSL.get(name)
         gain            = master * threshold_linear * (10.0 ** (this_dBSL / 20.0)) / max(peak, 1e-12)
         info['gain']    = float(max(0.0, min(1.0, gain)))  # clamp to [0,1]
-    return in_audio_reg
-
-"""
-def assign_subject_gains(in_audio_reg, threshold_linear, per_tone_dBSL, master=1.0):
-    for name, info in in_audio_reg.items():
-        peak = info.get('peak', 1.0)
-        this_dBSL = per_tone_dBSL.get(name)
-        
-        if this_dBSL is None:
-            raise ValueError(f"No dBSL defined for tone '{name}'")
-        
-        if peak is None:
-            raise ValueError("peak is None – audio not loaded or computed correctly")
-            
-        gain = master * threshold_linear * (10.0 ** (this_dBSL / 20.0)) / max(peak, 1e-12)
-        info['gain'] = float(max(0.0, min(1.0, gain)))
 
     return in_audio_reg
-"""
 
 # --------------------------PRELOAD STIMULI AND TEXT ---------------
 # dB_SL=60 or 65 or 50
-def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=35):
+def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=60):
     fixation_angle = 1 # 0.5 # 0.5 looks good, maybe a bit too small? ----> ADAPT
 
     if MRS == 0:
@@ -353,7 +336,7 @@ def preload_stimuli(win, stimulipath, subjectpath, vpdevice, dB_SL=35):
         # ======= AUDITORY
         # create tone registers
         audio_reg = preload_tones(vpdevice, {
-           'clicktrain': os.path.join(stimulipath, 'clicktrain_40Hz_500ms.wav')
+           'clicktrain': os.path.join(stimulipath, 'sounds', 'clicktrain_40Hz_500ms.wav')
         })
 
         # load threshold & add gains
