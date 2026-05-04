@@ -43,7 +43,7 @@ monitor_settings = stim_monitor()
 # set fullscr to True in MSR
 win = visual.Window(
     monitor=monitor_settings['monitor_name'], size=monitor_settings['monitor_size_pix'], 
-    fullscr=True, 
+    fullscr=False, 
     units="deg", 
     #color=[212, 212, 212],
     color= [160, 160, 160], # slightly darker gray to increase contrast with trigger pixel

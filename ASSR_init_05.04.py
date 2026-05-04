@@ -21,7 +21,7 @@ CONDITION = "ATT"   # "PAS", then "ATT" (ATT=attVIS=attend to visual stim)
 
 
 
-MRS = 1     # 0=no, 1=yes
+MRS = 0     # 0=no, 1=yes
 
 # -------------------------- PATHS -----------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))   # script location
