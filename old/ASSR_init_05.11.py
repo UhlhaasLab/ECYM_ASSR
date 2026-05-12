@@ -43,7 +43,7 @@ TRIG_R_ARR        = 240  # Sound presented simultaneously with a RIGHT arrow
 TRIG_RESPONSE     = 250  # Participant response (red/right button press)
 
 # ------------------- TRIAL STRUCTURE ----------------------------
-SOA = 1.5           # sec
+SOA = 1.500           # sec
 ARROW_DUR = 0.150     # or 200ms?
 
 N_NO_ARROW = 145    # number of no arrow trials 

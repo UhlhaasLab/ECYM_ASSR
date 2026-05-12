@@ -37,6 +37,7 @@ from utils.escape_cleanup_abort import check_abort, cleanup
 # -------------------- GENERAL --------------------
 timestamp = time.strftime('%Y%m%d_%H%M%S')
 psychopy_clock = core.Clock()
+# psychopy_clock.reset() # reset not needed i think, better if diffeernt times
 
 # -------------------- WINDOW --------------------------------
 monitor_settings = stim_monitor()
@@ -61,6 +62,13 @@ frameDur = 1.0 / monitor_rr # 0.008333s, 8.33ms in MSR.     0.016666s, 16.67ms o
 TRIG_FRAMES = 2 # pixel should show for 2 frames, = 16.66ms in MSR, 33.32ms on laptop
 soa_frames = round(SOA / frameDur) # in MSR: round(1.5s / 0.008333) = 180 frames for one SOA.
 
+"""
+monitor_rr = monitor_settings["refresh_rate"] # this is 120hz
+frameDur = 1.0/monitor_rr 
+TRIG_FRAMES = 2
+soa_frames = round(SOA/frameDur)
+"""
+
 # -------------------- LOGGING SETUP --------------------
 log_file = os.path.join(SUB_DIR, f"{SUB}_{CONDITION}_log_{timestamp}.csv")
 log_f = open(log_file, "w", newline="", encoding="utf-8")
@@ -73,10 +81,10 @@ txt_dict = preload_txt(win)
 instr = txt_dict["txt_intro_PAS"] if CONDITION == "PAS" else txt_dict["txt_intro_ATT"]
 txt_finished = txt_dict["txt_finished"]
 
-stim = preload_stimuli(win, STIM_DIR, SUB_DIR, device, dB_SL=35)
+stim = preload_stimuli(win, STIM_DIR, SUB_DIR, device, dB_SL=35) # adapt. check db_sl
 # audio
 audio_reg = stim["Audio"]
-# visual
+# vis
 fix = stim["fix_dot"]
 arrow_stim = stim["arrow_stim"]
 
@@ -113,7 +121,7 @@ for number in ["3", "2", "1"]:
     countdown_text.draw()
     win.flip()
     core.wait(1.0) # Show each number for 1 second
-print(f"Starting ASSR CONDITION {CONDITION}...")
+print(f"Starting subject {SUB}, ASSR CONDITION {CONDITION}...")
 
 # -------------------- INITIAL FIXATION --------------------
 for f in range(TRIG_FRAMES):
@@ -121,26 +129,21 @@ for f in range(TRIG_FRAMES):
     draw_pixel(win, trigger_to_RGB(TRIG_START))
     win.flip()
 
-# # debug
-# print(f"TRIG START ON {TRIG_START}, RGB: {trigger_to_RGB(TRIG_START)}")
-# print_trigger_info(device)
-# print("")
+# debug
+print(f"TRIG START ON {TRIG_START}, RGB: {trigger_to_RGB(TRIG_START)}")
+print_trigger_info(device)
+print("")
 
 for f in range(round(1.0 / frameDur) - TRIG_FRAMES):
     fix.draw()
     win.flip()
 
-# # debug
-# print(f"gray")
-# print_trigger_info(device)
-# print("")
+# debug
+print(f"gray")
+print_trigger_info(device)
+print("")
 
 # -------------------- MAIN LOOP --------------------
-"""
-# ADAPT -------------> should i reset the psychopy clock? 
-win.callOnFlip(psychopy_clock.reset) # set clock=0
-win.flip()
-"""
 infoaud_fb = audio_reg['clicktrain']
 
 for trial_data in trials:
