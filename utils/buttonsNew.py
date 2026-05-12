@@ -23,6 +23,11 @@ def stopButtons(startAndStopButtons):
         if state  in startAndStopButtons:
             return state
 
+
+
+
+
+# i changed this button press function!!!
 def read_button_press(device, button_log):
     """
     Read button presses from VPixx device.
@@ -31,7 +36,6 @@ def read_button_press(device, button_log):
     """
     if device is None:
         return None, None
-    
     try:
         device.updateRegisterCache()
         device.din.getDinLogStatus(button_log)
@@ -47,23 +51,45 @@ def read_button_press(device, button_log):
                         return button_name, timestamp
     except Exception as e:
         print(f"✗ Error reading button: {e}")
-    
     return None, None
+# here the new version, need to test it in headscan:
+def read_button_press_new(device, button_log):
+    if device is None:
+        return None, None
+    try:
+        device.din.getDinLogStatus(button_log)
+        n = button_log["newLogFrames"]
+        if not n:
+            return None, None
+        events = device.din.readDinLog(button_log, n)
+        for ts, code in events:
+            button_name = BUTTON_CODES_ALL.get(code)
+            if button_name in ("red", "green"): #, "blue"):
+                return button_name, ts
+    except Exception as e:
+        print(f"button read error: {e}")
+    return None, None
+
+
+
+
+
+
+
+
+
+
 
 def read_button_press_fast(device, button_log, valid_buttons):
     device.din.getDinLogStatus(button_log)
     n = button_log["newLogFrames"]
-    
     if not n:
         return None, None
-
     events = device.din.readDinLog(button_log, n)
-
     for ts, code in events:
         name = valid_buttons.get(code)
         if name:
             return name, ts
-
     return None, None
 
 
